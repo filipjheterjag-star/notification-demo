@@ -9,7 +9,7 @@
 
   <button onclick="request()">Allow Notifications</button>
   <button onclick="normal()">Normal Notification</button>
-  <button onclick="hacked()"> Hacked Demo</button>
+  <button onclick="hacked()">⚠️ Fake “Hacked” Demo</button>
 
   <script>
     function request() {
@@ -30,20 +30,35 @@
         return;
       }
 
+      const messages = [
+        "⚠️ Suspicious login detected",
+        "🔐 Password attempt blocked",
+        "📍 Login from unknown location",
+        "⚠️ Multiple failed logins",
+        "🛑 Account security check running",
+        "🔎 Scanning for malware",
+        "⚠️ Unusual activity detected",
+        "📡 New device connected",
+        "❗ Immediate action recommended",
+        "🧪 Security system alert (demo)"
+      ];
+
       let count = 0;
       const max = 50;
 
       const interval = setInterval(() => {
         count++;
 
-        new Notification("⚠️ SECURITY ALERT", {
-          body: `Unusual activity detected (${count}/${max})`
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+
+        new Notification("SECURITY ALERT (DEMO)", {
+          body: `${msg} (${count}/${max})`
         });
 
         if (count >= max) {
           clearInterval(interval);
         }
-      }, 1200); // 50 notifications in ~1 minute
+      }, 1200); // ~50 notifications in 1 minute
     }
   </script>
 </body>
