@@ -5,21 +5,47 @@
   <title>Notification Demo</title>
 </head>
 <body>
-  <h2>Browser Notification Demo</h2>
-  <button onclick="notify()">Send notification</button>
+  <h2>Notification Experiment</h2>
+
+  <button onclick="request()">Allow Notifications</button>
+  <button onclick="normal()">Normal Notification</button>
+  <button onclick="hacked()"> Hacked Demo</button>
 
   <script>
-    function notify() {
+    function request() {
+      Notification.requestPermission();
+    }
+
+    function normal() {
       if (Notification.permission === "granted") {
         new Notification("School Demo", {
-          body: "Critical Safety Alert!"
-        });
-      } else {
-        Notification.requestPermission().then(p => {
-          if (p === "granted") notify();
+          body: "This is a normal notification"
         });
       }
+    }
+
+    function hacked() {
+      if (Notification.permission !== "granted") {
+        alert("Allow notifications first");
+        return;
+      }
+
+      let count = 0;
+      const max = 50;
+
+      const interval = setInterval(() => {
+        count++;
+
+        new Notification("⚠️ SECURITY ALERT", {
+          body: `Unusual activity detected (${count}/${max})`
+        });
+
+        if (count >= max) {
+          clearInterval(interval);
+        }
+      }, 1200); // 50 notifications in ~1 minute
     }
   </script>
 </body>
 </html>
+
