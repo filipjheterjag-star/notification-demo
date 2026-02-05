@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Notification Demo</title>
+</head>
+<body>
+  <h2>Browser Notification Demo</h2>
+  <button onclick="notify()">Send notification</button>
+
+  <script>
+    function notify() {
+      if (Notification.permission === "granted") {
+        new Notification("School Demo", {
+          body: "Critical Safety Alert!"
+        });
+      } else {
+        Notification.requestPermission().then(p => {
+          if (p === "granted") notify();
+        });
+      }
+    }
+  </script>
+</body>
+</html>
