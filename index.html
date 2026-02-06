@@ -66,6 +66,18 @@
     border-radius:6px; height:200px; overflow-y:auto;
     font-size:13px;
   }
+
+  /* CONSENT MODAL */
+  .modal {
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center;
+    z-index:2000;
+  }
+  .modalBox {
+    background:var(--card); color:var(--text);
+    padding:20px; max-width:420px;
+    border-radius:10px; text-align:left;
+  }
 </style>
 </head>
 
@@ -85,7 +97,7 @@
   </div>
   <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
 
-  <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
+  <button class="danger" onclick="startHackedDemo()">⚠️ Fake “Hacked” Demo</button>
   <button class="stop" onclick="stopAll()">🛑 Stop</button>
 
   <div class="progress"><div class="bar" id="bar"></div></div>
@@ -119,6 +131,20 @@
   <div class="history" id="history">No notifications yet.</div>
 </div>
 
+<!-- CONSENT MODAL -->
+<div class="modal" id="consentModal">
+  <div class="modalBox">
+    <h3>⚠️ Demo Consent</h3>
+    <p>
+      This is a <strong>simulation</strong> for educational purposes.<br><br>
+      No real hacking occurs.<br>
+      Notifications may be limited by your browser.
+    </p>
+    <button class="danger" onclick="giveConsent()">I understand</button>
+    <button class="panelBtn" onclick="closeConsent()">Cancel</button>
+  </div>
+</div>
+
 <script>
   const panel = document.getElementById("panel");
   const bar = document.getElementById("bar");
@@ -133,8 +159,11 @@
   const blockedEl = document.getElementById("blocked");
   const protectionEl = document.getElementById("protection");
 
+  const modal = document.getElementById("consentModal");
+
   let total = 30, done = 0;
   let attempts = 0, sent = 0;
+  let consentGiven = false;
   const timeouts = [];
 
   const messages = [
@@ -202,6 +231,24 @@
       addHistory("Normal notification");
     } catch {}
     updateCounters(); updateProtection();
+  }
+
+  function startHackedDemo(){
+    if (!consentGiven){
+      modal.style.display="flex";
+      return;
+    }
+    fakeHacked();
+  }
+
+  function giveConsent(){
+    consentGiven = true;
+    modal.style.display="none";
+    fakeHacked();
+  }
+
+  function closeConsent(){
+    modal.style.display="none";
   }
 
   function fakeHacked(){
