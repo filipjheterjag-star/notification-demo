@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Hacked</title>
+  <title>Notification Demo</title>
 
   <style>
     body {
@@ -33,6 +33,7 @@
     .primary { background: #4f46e5; color: white; }
     .normal  { background: #10b981; color: white; }
     .danger  { background: #ef4444; color: white; }
+    .stop    { background: #6b7280; color: white; }
 
     .log {
       margin-top: 15px;
@@ -54,24 +55,28 @@
     <button class="primary" onclick="requestPermission()">Allow Notifications</button>
     <button class="normal" onclick="normalNotification()">Normal Notification</button>
     <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
+    <button class="stop" onclick="stopAll()">🛑 Stop</button>
 
-    <div class="log" id="log">
-      Ready.
-    </div>
+    <div class="log" id="log">Ready.</div>
   </div>
 
   <script>
-    const log = msg =>
-      document.getElementById("log").innerHTML += "<br>" + msg;
+    const logBox = document.getElementById("log");
+    const timeouts = [];
+
+    function log(msg) {
+      logBox.innerHTML += "<br>" + msg;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
 
     const messages = [
-      " Suspicious login detected",
-      " Password attempt blocked",
-      " Login from unknown location",
-      " Multiple failed logins",
+      "Suspicious login detected",
+      "Password attempt blocked",
+      "Login from unknown location",
+      "Multiple failed logins",
       " New device connected",
-      " Immediate action required",
-      " Security alert "
+      "Immediate action required",
+      "Security alert (demo)"
     ];
 
     function requestPermission() {
@@ -100,19 +105,23 @@
       log("⚠️ Fake hacked demo started");
 
       for (let i = 1; i <= 50; i++) {
-        setTimeout(() => {
-          const msg =
-            messages[Math.floor(Math.random() * messages.length)];
-
+        const t = setTimeout(() => {
+          const msg = messages[Math.floor(Math.random() * messages.length)];
           try {
-            new Notification("SECURITY ALERT (DEMO)", {
-              body: msg
-            });
+            new Notification("SECURITY ALERT (DEMO)", { body: msg });
           } catch (e) {}
-
           log(`Attempt ${i}/50`);
         }, i * 200);
+
+        timeouts.push(t);
       }
+    }
+
+    function stopAll() {
+      while (timeouts.length) {
+        clearTimeout(timeouts.pop());
+      }
+      log("🛑 Stopped all pending notifications");
     }
   </script>
 
