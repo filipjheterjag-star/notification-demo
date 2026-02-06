@@ -33,69 +33,44 @@ button{
 .panelBtn{background:#0ea5e9;color:#fff}
 
 .notice{
-  margin-top:8px;
-  padding:8px;
-  background:#fde68a;
-  color:#92400e;
-  border-radius:6px;
-  font-size:13px;
-  text-align:center;
-  display:none;
+  margin-top:8px;padding:8px;border-radius:6px;
+  background:#fde68a;color:#92400e;font-size:13px;
+  text-align:center;display:none;
 }
 
 .row{margin-top:10px;font-size:14px}
-.badge{
-  padding:3px 8px;border-radius:999px;font-size:12px;
-  color:#fff;margin-left:6px;
-}
-.green{background:var(--green)}
-.yellow{background:var(--yellow)}
-.red{background:var(--red)}
+.badge{padding:3px 8px;border-radius:999px;font-size:12px;color:#fff;margin-left:6px}
+.green{background:var(--green)} .yellow{background:var(--yellow)} .red{background:var(--red)}
 
-.progress{
-  width:100%;height:14px;background:#374151;
-  border-radius:7px;overflow:hidden;margin-top:10px;
-}
+.progress{width:100%;height:14px;background:#374151;border-radius:7px;overflow:hidden;margin-top:10px}
 .bar{height:100%;width:0%;background:#ef4444}
 
-.log{
-  margin-top:10px;padding:10px;background:var(--panel);
-  border-radius:6px;height:120px;overflow-y:auto;
-  font-size:13px;
-}
+.log{margin-top:10px;padding:10px;background:var(--panel);border-radius:6px;height:120px;overflow-y:auto;font-size:13px}
 
 /* SIDE PANEL */
-.side{
-  position:fixed;top:0;right:-320px;
-  width:320px;height:100%;background:var(--card);
-  padding:20px;box-shadow:-10px 0 25px rgba(0,0,0,.25);
-  transition:right .3s ease;z-index:1000;
-}
+.side{position:fixed;top:0;right:-320px;width:320px;height:100%;background:var(--card);
+  padding:20px;box-shadow:-10px 0 25px rgba(0,0,0,.25);transition:right .3s ease;z-index:1000}
 .side.open{right:0}
-.history{
-  margin-top:10px;padding:10px;background:var(--panel);
-  border-radius:6px;height:200px;overflow-y:auto;
-  font-size:13px;
-}
+.history{margin-top:10px;padding:10px;background:var(--panel);border-radius:6px;height:200px;overflow-y:auto;font-size:13px}
 
 /* MODALS */
-.modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:none;align-items:center;justify-content:center;
-  z-index:2000;
-}
-.modalBox{
-  background:var(--card);color:var(--text);
-  padding:20px;max-width:420px;
-  border-radius:10px;
-}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:2000}
+.modalBox{background:var(--card);color:var(--text);padding:20px;max-width:420px;border-radius:10px}
 
-.footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:13px;
-  opacity:0.7;
+.footer{margin-top:20px;text-align:center;font-size:13px;opacity:.7}
+
+/* WINDOWS VISUAL TOASTS (PREVIEW) */
+#toastArea{
+  position:fixed;right:16px;bottom:16px;z-index:3000;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;
 }
+.toast{
+  width:320px;background:#111827;color:#e5e7eb;border-radius:10px;
+  box-shadow:0 10px 25px rgba(0,0,0,.35);padding:12px;
+  animation:slideIn .2s ease-out;
+}
+.toast small{opacity:.7}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 
@@ -104,20 +79,17 @@ button{
 <div class="main">
   <h2>🔔 Notification Experiment</h2>
 
-  <!-- WINDOWS WARNING -->
   <div class="notice" id="windowsNotice">
-    ℹ️ Only supported for Chromebook at this point.<br>
-    Windows browsers aggressively limit notification spam.
+    ℹ️ Windows detected. Using visual notification preview (simulation).
   </div>
 
   <button class="panelBtn" onclick="toggleInfo()">ℹ️ What is this demo?</button>
   <button class="panelBtn" onclick="openHelp()">❓ Why didn’t I get a notification?</button>
 
-  <div id="infoBox" style="display:none;margin-top:10px;padding:12px;background:var(--panel);border-radius:8px;font-size:14px;">
+  <div id="infoBox" style="display:none;margin-top:10px;padding:12px;background:var(--panel);border-radius:8px;font-size:14px">
     <strong>Explanation</strong><br><br>
-    This website demonstrates how browser notifications work and how modern
-    browsers protect users from notification abuse.<br><br>
-    No real hacking occurs. All notifications are simulated for educational purposes.
+    This site demonstrates how browser notifications work and how browsers/OSes
+    protect users from spam. On Windows, a visual preview is used.
   </div>
 
   <button class="panelBtn" onclick="togglePanel()">⚙️ Open Panel</button>
@@ -125,9 +97,7 @@ button{
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
   <button class="normal" onclick="normalNotification()">Normal Notification</button>
 
-  <div class="row">
-    Notifications to send: <strong><span id="countLabel">30</span></strong>
-  </div>
+  <div class="row">Notifications to send: <strong><span id="countLabel">30</span></strong></div>
   <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
 
   <button class="danger" onclick="startHackedDemo()">⚠️ Fake “Hacked” Demo</button>
@@ -136,19 +106,10 @@ button{
   <div class="progress"><div class="bar" id="bar"></div></div>
 
   <div class="row">Status: <strong id="statusText">Idle</strong></div>
-  <div class="row">
-    Attempts: <strong id="attempts">0</strong> |
-    Sent: <strong id="sent">0</strong> |
-    Blocked: <strong id="blocked">0</strong>
-  </div>
-
-  <div class="row">
-    Browser protection:
-    <span class="badge yellow" id="protection">Unknown</span>
-  </div>
+  <div class="row">Attempts: <strong id="attempts">0</strong> | Sent: <strong id="sent">0</strong> | Blocked: <strong id="blocked">0</strong></div>
+  <div class="row">Browser protection: <span class="badge yellow" id="protection">Unknown</span></div>
 
   <div class="log" id="log">Ready.</div>
-
   <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
@@ -165,21 +126,20 @@ button{
 <div class="modal" id="helpModal">
   <div class="modalBox">
     <h3>❓ Why didn’t I get a notification?</h3>
-    <p style="font-size:14px;">
-      On Windows, browsers and the operating system aggressively limit
-      notification spam to protect users.<br><br>
-      Even if permission is granted, notifications may be silently blocked
-      when many are sent quickly or when the site is considered low-trust
-      (such as demos or test sites).<br><br>
-      This behavior is intentional and demonstrates browser protection.
+    <p style="font-size:14px">
+      Windows limits notification spam at the OS level. This demo shows a visual
+      preview to represent what would have appeared.
     </p>
     <button class="panelBtn" onclick="closeHelp()">Close</button>
   </div>
 </div>
 
+<!-- WINDOWS TOAST AREA -->
+<div id="toastArea"></div>
+
 <script>
 const isWindows=/Win/i.test(navigator.userAgent);
-if(isWindows)document.getElementById("windowsNotice").style.display="block";
+if(isWindows) document.getElementById("windowsNotice").style.display="block";
 
 const panel=document.getElementById("panel");
 const bar=document.getElementById("bar");
@@ -193,6 +153,7 @@ const sentEl=document.getElementById("sent");
 const blockedEl=document.getElementById("blocked");
 const protectionEl=document.getElementById("protection");
 const helpModal=document.getElementById("helpModal");
+const toastArea=document.getElementById("toastArea");
 
 let total=30,done=0,attempts=0,sent=0;
 const timeouts=[];
@@ -206,58 +167,61 @@ const messages=[
 
 function togglePanel(){panel.classList.toggle("open")}
 function toggleDark(){document.body.classList.toggle("dark")}
-function toggleInfo(){
-  const box=document.getElementById("infoBox");
-  box.style.display=box.style.display==="none"?"block":"none";
-}
+function toggleInfo(){const b=document.getElementById("infoBox");b.style.display=b.style.display==="none"?"block":"none"}
 function openHelp(){helpModal.style.display="flex"}
 function closeHelp(){helpModal.style.display="none"}
 function updateCount(){total=+slider.value;label.textContent=total}
-function log(msg){logBox.innerHTML+="<br>"+msg}
-function addHistory(msg){
-  if(historyBox.textContent.includes("No notifications"))historyBox.innerHTML="";
-  historyBox.innerHTML+="• "+msg+"<br>";
-}
-function updateCounters(){
-  attemptsEl.textContent=attempts;
-  sentEl.textContent=sent;
-  blockedEl.textContent=attempts-sent;
-}
+function log(m){logBox.innerHTML+="<br>"+m;logBox.scrollTop=logBox.scrollHeight}
+function addHistory(m){if(historyBox.textContent.includes("No notifications"))historyBox.innerHTML="";historyBox.innerHTML+="• "+m+"<br>"}
+function updateCounters(){attemptsEl.textContent=attempts;sentEl.textContent=sent;blockedEl.textContent=attempts-sent}
 function updateProtection(){
-  if(Notification.permission==="denied"){
-    protectionEl.textContent="Blocked";protectionEl.className="badge red";
-  }else if(attempts-sent>3){
-    protectionEl.textContent="Limited";protectionEl.className="badge yellow";
+  if(Notification.permission==="denied"){protectionEl.textContent="Blocked";protectionEl.className="badge red"}
+  else if(attempts-sent>3){protectionEl.textContent="Limited";protectionEl.className="badge yellow"}
+  else{protectionEl.textContent="Allowed";protectionEl.className="badge green"}
+}
+
+function showToast(title, body){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.innerHTML=`<strong>${title}</strong><br><small>${body}</small><br><small>Preview • Simulation</small>`;
+  toastArea.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function sendNotification(title, body){
+  if(isWindows){
+    showToast(title, body);
+    sent++; // preview counts as sent for demo
   }else{
-    protectionEl.textContent="Allowed";protectionEl.className="badge green";
+    try{new Notification(title,{body});sent++;}catch{}
   }
 }
+
 function requestPermission(){
-  Notification.requestPermission().then(p=>{
-    log("Permission: "+p);updateProtection();
-  });
+  Notification.requestPermission().then(p=>{log("Permission: "+p);updateProtection()});
 }
 function normalNotification(){
-  if(Notification.permission!=="granted")return;
-  attempts++;
-  try{new Notification("School Demo",{body:"Normal notification"});sent++;}catch{}
-  updateCounters();updateProtection();addHistory("Normal notification");
+  if(!isWindows && Notification.permission!=="granted") return;
+  attempts++; sendNotification("School Demo","Normal notification");
+  addHistory("Normal notification"); updateCounters(); updateProtection();
 }
 function startHackedDemo(){
-  if(Notification.permission!=="granted"){alert("Allow notifications first");return;}
-  stopAll();done=attempts=sent=0;bar.style.width="0%";
+  if(!isWindows && Notification.permission!=="granted"){alert("Allow notifications first");return;}
+  stopAll();done=attempts=sent=0;bar.style.width="0%";statusText.textContent="Sending…";
   for(let i=1;i<=total;i++){
     const t=setTimeout(()=>{
       attempts++;done++;
       const msg=messages[Math.floor(Math.random()*messages.length)];
-      try{new Notification("SECURITY ALERT (DEMO)",{body:msg});sent++;}catch{}
+      sendNotification("SECURITY ALERT (DEMO)", msg);
       bar.style.width=(done/total*100)+"%";
-      updateCounters();updateProtection();addHistory(msg);
+      statusText.textContent=done===total?"Completed":"Sending…";
+      addHistory("SECURITY ALERT: "+msg);
+      updateCounters(); updateProtection();
     },i*200);
     timeouts.push(t);
   }
 }
-function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop());}
+function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop());statusText.textContent="Stopped"}
 </script>
 
 </body>
