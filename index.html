@@ -9,14 +9,14 @@
     --bg: #f4f6f8;
     --card: #ffffff;
     --text: #000000;
-    --log: #eef2ff;
+    --panel: #eef2ff;
   }
 
   body.dark {
     --bg: #0f172a;
     --card: #1e293b;
     --text: #e5e7eb;
-    --log: #020617;
+    --panel: #020617;
   }
 
   body {
@@ -24,17 +24,34 @@
     font-family: Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 30px;
+    padding: 20px;
     transition: background 0.3s, color 0.3s;
   }
 
-  .card {
-    max-width: 460px;
+  .layout {
+    display: flex;
+    gap: 20px;
+    max-width: 1000px;
     margin: auto;
+  }
+
+  .main, .side {
     background: var(--card);
-    padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+
+  .main {
+    flex: 2;
+  }
+
+  .side {
+    flex: 1;
+  }
+
+  h2, h3 {
+    margin-top: 0;
   }
 
   button {
@@ -53,14 +70,13 @@
   .stop { background: #6b7280; color: white; }
   .toggle { background: #0ea5e9; color: white; }
 
-  .log, .history {
-    margin-top: 15px;
-    padding: 10px;
-    background: var(--log);
-    border-radius: 6px;
-    font-size: 13px;
-    height: 110px;
-    overflow-y: auto;
+  label {
+    font-size: 14px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    margin-top: 5px;
   }
 
   .progress {
@@ -78,38 +94,61 @@
     background: #ef4444;
   }
 
-  label {
-    font-size: 14px;
+  .log, .history {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--panel);
+    border-radius: 6px;
+    font-size: 13px;
+    height: 140px;
+    overflow-y: auto;
+  }
+
+  /* Responsive: stack panels on small screens */
+  @media (max-width: 800px) {
+    .layout {
+      flex-direction: column;
+    }
   }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2>🔔 Notification Experiment</h2>
+<div class="layout">
 
-  <button class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
+  <!-- MAIN PANEL -->
+  <div class="main">
+    <h2>🔔 Notification Experiment</h2>
 
-  <button class="primary" onclick="requestPermission()">Allow Notifications</button>
-  <button class="normal" onclick="normalNotification()">Normal Notification</button>
+    <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+    <button class="normal" onclick="normalNotification()">Normal Notification</button>
 
-  <label>
-    Notifications: <strong><span id="countLabel">30</span></strong>
-  </label>
-  <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
+    <label>
+      Notifications to send:
+      <strong><span id="countLabel">30</span></strong>
+    </label>
+    <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
 
-  <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
-  <button class="stop" onclick="stopAll()">🛑 Stop</button>
+    <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
+    <button class="stop" onclick="stopAll()">🛑 Stop</button>
 
-  <div class="progress">
-    <div class="bar" id="bar"></div>
+    <div class="progress">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <div class="log" id="log">Status log ready.</div>
   </div>
 
-  <div class="log" id="log">Status log ready.</div>
+  <!-- SIDE PANEL -->
+  <div class="side">
+    <h3>⚙️ Controls</h3>
+    <button class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
 
-  <h4>🕘 Fake Notification History</h4>
-  <div class="history" id="history">No notifications yet.</div>
+    <h3 style="margin-top:20px;">🕘 Fake Notification History</h3>
+    <div class="history" id="history">No notifications yet.</div>
+  </div>
+
 </div>
 
 <script>
