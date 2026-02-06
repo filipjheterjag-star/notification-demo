@@ -1,39 +1,120 @@
-<script>
-  let attempts = 0;
-  let shown = 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hacked</title>
 
-  const messages = [
-    "⚠️ Suspicious login detected",
-    "🔐 Password attempt blocked",
-    "📍 Login from unknown location",
-    "🛑 Multiple failed logins",
-    "📡 New device connected",
-    "❗ Immediate action required",
-    "🧪 Security alert (demo)"
-  ];
-
-  function hacked() {
-    if (Notification.permission !== "granted") {
-      alert("Allow notifications first");
-      return;
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 30px;
     }
 
-    document.getElementById("status").textContent =
-      "⚠️ Spam demo running (browser-limited)";
-
-    for (let i = 0; i < 50; i++) {
-      setTimeout(() => {
-        attempts++;
-        try {
-          new Notification("SECURITY ALERT (DEMO)", {
-            body: messages[Math.floor(Math.random() * messages.length)]
-          });
-          shown++;
-        } catch (e) {}
-
-        document.getElementById("status").textContent =
-          `Attempts: ${attempts} | Shown: ${shown} (browser limited)`;
-      }, i * 200); // aggressive spam attempt
+    .card {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-  }
-</script>
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .primary { background: #4f46e5; color: white; }
+    .normal  { background: #10b981; color: white; }
+    .danger  { background: #ef4444; color: white; }
+
+    .log {
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef2ff;
+      border-radius: 6px;
+      font-size: 14px;
+      height: 120px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h2>🔔 Notification Experiment</h2>
+
+    <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+    <button class="normal" onclick="normalNotification()">Normal Notification</button>
+    <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
+
+    <div class="log" id="log">
+      Ready.
+    </div>
+  </div>
+
+  <script>
+    const log = msg =>
+      document.getElementById("log").innerHTML += "<br>" + msg;
+
+    const messages = [
+      " Suspicious login detected",
+      " Password attempt blocked",
+      " Login from unknown location",
+      " Multiple failed logins",
+      " New device connected",
+      " Immediate action required",
+      " Security alert "
+    ];
+
+    function requestPermission() {
+      Notification.requestPermission().then(p => {
+        log("Permission: " + p);
+      });
+    }
+
+    function normalNotification() {
+      if (Notification.permission === "granted") {
+        new Notification("School Demo", {
+          body: "This is a normal notification"
+        });
+        log("Normal notification sent");
+      } else {
+        log("Permission not granted");
+      }
+    }
+
+    function fakeHacked() {
+      if (Notification.permission !== "granted") {
+        alert("Allow notifications first");
+        return;
+      }
+
+      log("⚠️ Fake hacked demo started");
+
+      for (let i = 1; i <= 50; i++) {
+        setTimeout(() => {
+          const msg =
+            messages[Math.floor(Math.random() * messages.length)];
+
+          try {
+            new Notification("SECURITY ALERT (DEMO)", {
+              body: msg
+            });
+          } catch (e) {}
+
+          log(`Attempt ${i}/50`);
+        }, i * 200);
+      }
+    }
+  </script>
+
+</body>
+</html>
