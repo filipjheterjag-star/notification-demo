@@ -6,114 +6,65 @@
 
 <style>
   :root {
-    --bg: #f4f6f8;
-    --card: #ffffff;
-    --text: #000000;
-    --panel: #eef2ff;
+    --bg:#f4f6f8; --card:#fff; --text:#000; --panel:#eef2ff;
+    --green:#22c55e; --yellow:#eab308; --red:#ef4444;
   }
-
   body.dark {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #e5e7eb;
-    --panel: #020617;
+    --bg:#0f172a; --card:#1e293b; --text:#e5e7eb; --panel:#020617;
   }
-
   body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 20px;
-    transition: background 0.3s, color 0.3s;
+    margin:0; padding:20px; font-family:Arial,sans-serif;
+    background:var(--bg); color:var(--text);
   }
-
-  /* MAIN CARD */
   .main {
-    max-width: 500px;
-    margin: auto;
-    background: var(--card);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    max-width:520px; margin:auto; background:var(--card);
+    padding:20px; border-radius:10px;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
   }
-
   button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    font-size: 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+    width:100%; padding:10px; margin-top:10px;
+    border:none; border-radius:6px; cursor:pointer;
+    font-size:15px;
   }
+  .primary{background:#4f46e5;color:#fff}
+  .normal{background:#10b981;color:#fff}
+  .danger{background:#ef4444;color:#fff}
+  .stop{background:#6b7280;color:#fff}
+  .panelBtn{background:#0ea5e9;color:#fff}
 
-  .primary { background: #4f46e5; color: white; }
-  .normal  { background: #10b981; color: white; }
-  .danger  { background: #ef4444; color: white; }
-  .stop    { background: #6b7280; color: white; }
-  .panelBtn { background: #0ea5e9; color: white; }
-
-  label {
-    font-size: 14px;
+  .row {margin-top:10px;font-size:14px}
+  .badge {
+    padding:3px 8px; border-radius:999px; font-size:12px;
+    color:#fff; margin-left:6px;
   }
-
-  input[type="range"] {
-    width: 100%;
-    margin-top: 5px;
-  }
+  .green{background:var(--green)}
+  .yellow{background:var(--yellow)}
+  .red{background:var(--red)}
 
   .progress {
-    width: 100%;
-    height: 14px;
-    background: #374151;
-    border-radius: 7px;
-    overflow: hidden;
-    margin-top: 10px;
+    width:100%; height:14px; background:#374151;
+    border-radius:7px; overflow:hidden; margin-top:10px;
   }
-
-  .bar {
-    height: 100%;
-    width: 0%;
-    background: #ef4444;
-  }
+  .bar {height:100%; width:0%; background:#ef4444}
 
   .log {
-    margin-top: 10px;
-    padding: 10px;
-    background: var(--panel);
-    border-radius: 6px;
-    font-size: 13px;
-    height: 120px;
-    overflow-y: auto;
+    margin-top:10px; padding:10px; background:var(--panel);
+    border-radius:6px; height:120px; overflow-y:auto;
+    font-size:13px;
   }
 
-  /* SLIDE PANEL */
-  .side-panel {
-    position: fixed;
-    top: 0;
-    right: -320px;
-    width: 320px;
-    height: 100%;
-    background: var(--card);
-    box-shadow: -10px 0 25px rgba(0,0,0,0.25);
-    padding: 20px;
-    transition: right 0.3s ease;
-    z-index: 1000;
+  /* SIDE PANEL */
+  .side {
+    position:fixed; top:0; right:-320px;
+    width:320px; height:100%; background:var(--card);
+    padding:20px; box-shadow:-10px 0 25px rgba(0,0,0,.25);
+    transition:right .3s ease; z-index:1000;
   }
-
-  .side-panel.open {
-    right: 0;
-  }
-
+  .side.open { right:0 }
   .history {
-    margin-top: 10px;
-    padding: 10px;
-    background: var(--panel);
-    border-radius: 6px;
-    font-size: 13px;
-    height: 200px;
-    overflow-y: auto;
+    margin-top:10px; padding:10px; background:var(--panel);
+    border-radius:6px; height:200px; overflow-y:auto;
+    font-size:13px;
   }
 </style>
 </head>
@@ -123,32 +74,46 @@
 <div class="main">
   <h2>🔔 Notification Experiment</h2>
 
-  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Controls</button>
+  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Panel</button>
 
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
   <button class="normal" onclick="normalNotification()">Normal Notification</button>
 
-  <label>
+  <div class="row">
     Notifications to send:
     <strong><span id="countLabel">30</span></strong>
-  </label>
+  </div>
   <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
 
   <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
   <button class="stop" onclick="stopAll()">🛑 Stop</button>
 
-  <div class="progress">
-    <div class="bar" id="bar"></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <div class="row">
+    Status:
+    <strong id="statusText">Idle</strong>
   </div>
 
-  <div class="log" id="log">Status log ready.</div>
+  <div class="row">
+    Attempts: <strong id="attempts">0</strong> |
+    Sent: <strong id="sent">0</strong> |
+    Blocked: <strong id="blocked">0</strong>
+  </div>
+
+  <div class="row">
+    Browser protection:
+    <span class="badge yellow" id="protection">Unknown</span>
+  </div>
+
+  <div class="log" id="log">Ready.</div>
 </div>
 
 <!-- SIDE PANEL -->
-<div class="side-panel" id="panel">
+<div class="side" id="panel">
   <h3>⚙️ Controls</h3>
   <button class="panelBtn" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
-  <button class="panelBtn" onclick="togglePanel()">❌ Close Panel</button>
+  <button class="panelBtn" onclick="togglePanel()">❌ Close</button>
 
   <h3 style="margin-top:20px;">🕘 Fake Notification History</h3>
   <div class="history" id="history">No notifications yet.</div>
@@ -156,14 +121,20 @@
 
 <script>
   const panel = document.getElementById("panel");
-  const logBox = document.getElementById("log");
-  const historyBox = document.getElementById("history");
   const bar = document.getElementById("bar");
   const slider = document.getElementById("slider");
   const label = document.getElementById("countLabel");
+  const logBox = document.getElementById("log");
+  const historyBox = document.getElementById("history");
 
-  let total = 30;
-  let done = 0;
+  const statusText = document.getElementById("statusText");
+  const attemptsEl = document.getElementById("attempts");
+  const sentEl = document.getElementById("sent");
+  const blockedEl = document.getElementById("blocked");
+  const protectionEl = document.getElementById("protection");
+
+  let total = 30, done = 0;
+  let attempts = 0, sent = 0;
   const timeouts = [];
 
   const messages = [
@@ -172,24 +143,23 @@
     "Login from unknown location",
     "Multiple failed logins",
     "New device connected",
-    "Immediate action required",
-    "Security scan running"
+    "Immediate action required"
   ];
 
-  function togglePanel() {
-    panel.classList.toggle("open");
+  function togglePanel(){ panel.classList.toggle("open"); }
+  function toggleDark(){ document.body.classList.toggle("dark"); }
+
+  function updateCount(){
+    total = Number(slider.value);
+    label.textContent = total;
   }
 
-  function toggleDark() {
-    document.body.classList.toggle("dark");
-  }
-
-  function log(msg) {
+  function log(msg){
     logBox.innerHTML += "<br>" + msg;
     logBox.scrollTop = logBox.scrollHeight;
   }
 
-  function addHistory(msg) {
+  function addHistory(msg){
     if (historyBox.textContent.includes("No notifications")) {
       historyBox.innerHTML = "";
     }
@@ -197,53 +167,73 @@
     historyBox.scrollTop = historyBox.scrollHeight;
   }
 
-  function updateCount() {
-    total = Number(slider.value);
-    label.textContent = total;
+  function updateCounters(){
+    attemptsEl.textContent = attempts;
+    sentEl.textContent = sent;
+    blockedEl.textContent = attempts - sent;
   }
 
-  function requestPermission() {
-    Notification.requestPermission().then(p => log("Permission: " + p));
+  function updateProtection(){
+    if (Notification.permission === "denied") {
+      protectionEl.textContent = "Blocked";
+      protectionEl.className = "badge red";
+    } else if (attempts - sent > 3) {
+      protectionEl.textContent = "Limited";
+      protectionEl.className = "badge yellow";
+    } else {
+      protectionEl.textContent = "Allowed";
+      protectionEl.className = "badge green";
+    }
   }
 
-  function normalNotification() {
-    if (Notification.permission === "granted") {
-      new Notification("School Demo", { body: "Normal notification" });
-      log("Normal notification sent");
+  function requestPermission(){
+    Notification.requestPermission().then(p=>{
+      log("Permission: " + p);
+      updateProtection();
+    });
+  }
+
+  function normalNotification(){
+    if (Notification.permission !== "granted") return;
+    attempts++;
+    try {
+      new Notification("School Demo",{body:"Normal notification"});
+      sent++;
       addHistory("Normal notification");
-    }
+    } catch {}
+    updateCounters(); updateProtection();
   }
 
-  function fakeHacked() {
+  function fakeHacked(){
     if (Notification.permission !== "granted") {
-      alert("Allow notifications first");
-      return;
+      alert("Allow notifications first"); return;
     }
-
     stopAll();
-    done = 0;
+    done = attempts = sent = 0;
     bar.style.width = "0%";
+    statusText.textContent = "Sending…";
     log("Fake hacked demo started");
 
-    for (let i = 1; i <= total; i++) {
-      const t = setTimeout(() => {
-        done++;
-        const msg = messages[Math.floor(Math.random() * messages.length)];
+    for(let i=1;i<=total;i++){
+      const t=setTimeout(()=>{
+        attempts++; done++;
+        const msg=messages[Math.floor(Math.random()*messages.length)];
         try {
-          new Notification("SECURITY ALERT (DEMO)", { body: msg });
+          new Notification("SECURITY ALERT (DEMO)",{body:msg});
+          sent++;
         } catch {}
-
-        bar.style.width = (done / total * 100) + "%";
-        log("Attempt " + done + "/" + total);
-        addHistory("SECURITY ALERT: " + msg);
-      }, i * 200);
-
+        bar.style.width = (done/total*100)+"%";
+        statusText.textContent = done===total ? "Completed" : "Sending…";
+        updateCounters(); updateProtection();
+        addHistory("SECURITY ALERT: "+msg);
+      }, i*200);
       timeouts.push(t);
     }
   }
 
-  function stopAll() {
-    while (timeouts.length) clearTimeout(timeouts.pop());
+  function stopAll(){
+    while(timeouts.length) clearTimeout(timeouts.pop());
+    statusText.textContent = "Stopped";
     log("Stopped");
   }
 </script>
