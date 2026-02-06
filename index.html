@@ -20,10 +20,6 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
-    h2 {
-      margin-top: 0;
-    }
-
     button {
       width: 100%;
       padding: 10px;
@@ -35,9 +31,9 @@
     }
 
     .primary { background: #4f46e5; color: white; }
-    .normal { background: #10b981; color: white; }
-    .danger { background: #ef4444; color: white; }
-    .stop   { background: #6b7280; color: white; }
+    .normal  { background: #10b981; color: white; }
+    .danger  { background: #ef4444; color: white; }
+    .stop    { background: #6b7280; color: white; }
 
     .status {
       margin-top: 15px;
@@ -54,92 +50,8 @@
     <h2>🔔 Notification Experiment</h2>
 
     <button class="primary" onclick="request()">Allow Notifications</button>
-    <button class="normal" onclick="normal()">Send Normal Notification</button>
+    <button class="normal" onclick="normal()">Normal Notification</button>
     <button class="danger" onclick="hacked()">⚠️ Fake “Hacked” Demo</button>
-    <button class="stop" onclick="stop()">🛑 Stop Demo</button>
+    <button class="stop" onclick="stopAll()">🛑 Stop All</button>
 
     <div class="status">
-      <strong>Status:</strong>
-      <div id="status">Idle</div>
-      <div id="count"></div>
-    </div>
-  </div>
-
-  <script>
-    let interval = null;
-    let sent = 0;
-    const max = 50;
-
-    const messages = [
-      "⚠️ Suspicious login detected",
-      "🔐 Password attempt blocked",
-      "📍 Login from unknown location",
-      "🛑 Multiple failed logins",
-      "🔎 Scanning for threats",
-      "📡 New device connected",
-      "❗ Security verification required",
-      "🧪 Demo security alert"
-    ];
-
-    function updateStatus(text) {
-      document.getElementById("status").textContent = text;
-    }
-
-    function updateCount() {
-      document.getElementById("count").textContent =
-        sent ? `Notifications sent: ${sent}/${max}` : "";
-    }
-
-    function request() {
-      Notification.requestPermission().then(p => {
-        updateStatus("Permission: " + p);
-      });
-    }
-
-    function normal() {
-      if (Notification.permission === "granted") {
-        new Notification("School Demo", {
-          body: "This is a normal notification"
-        });
-      }
-    }
-
-    function hacked() {
-      if (Notification.permission !== "granted") {
-        alert("Allow notifications first");
-        return;
-      }
-
-      if (interval) return;
-
-      sent = 0;
-      updateStatus("⚠️ Fake hacked demo running...");
-      updateCount();
-
-      interval = setInterval(() => {
-        sent++;
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-
-        new Notification("SECURITY ALERT (DEMO)", {
-          body: `${msg} (${sent}/${max})`
-        });
-
-        updateCount();
-
-        if (sent >= max) {
-          stop();
-        }
-      }, 1200);
-    }
-
-    function stop() {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
-        updateStatus("Stopped");
-      }
-    }
-  </script>
-
-</body>
-</html>
