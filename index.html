@@ -1,191 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Notification Demo</title>
+<meta charset="UTF-8">
+<title>Notification Demo</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 30px;
-    }
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --text: #000000;
+    --log: #eef2ff;
+  }
 
-    .card {
-      max-width: 440px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+  body.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e5e7eb;
+    --log: #020617;
+  }
 
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 15px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 30px;
+    transition: background 0.3s, color 0.3s;
+  }
 
-    .primary { background: #4f46e5; color: white; }
-    .normal  { background: #10b981; color: white; }
-    .danger  { background: #ef4444; color: white; }
-    .stop    { background: #6b7280; color: white; }
+  .card {
+    max-width: 460px;
+    margin: auto;
+    background: var(--card);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
 
-    .log {
-      margin-top: 15px;
-      padding: 10px;
-      background: #eef2ff;
-      border-radius: 6px;
-      font-size: 14px;
-      height: 120px;
-      overflow-y: auto;
-    }
+  button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 
-    .controls {
-      margin-top: 15px;
-    }
+  .primary { background: #4f46e5; color: white; }
+  .normal { background: #10b981; color: white; }
+  .danger { background: #ef4444; color: white; }
+  .stop { background: #6b7280; color: white; }
+  .toggle { background: #0ea5e9; color: white; }
 
-    .progress {
-      width: 100%;
-      height: 16px;
-      background: #e5e7eb;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
+  .log, .history {
+    margin-top: 15px;
+    padding: 10px;
+    background: var(--log);
+    border-radius: 6px;
+    font-size: 13px;
+    height: 110px;
+    overflow-y: auto;
+  }
 
-    .bar {
-      height: 100%;
-      width: 0%;
-      background: #ef4444;
-      transition: width 0.15s linear;
-    }
+  .progress {
+    width: 100%;
+    height: 14px;
+    background: #374151;
+    border-radius: 7px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
 
-    label {
-      font-size: 14px;
-    }
-  </style>
+  .bar {
+    height: 100%;
+    width: 0%;
+    background: #ef4444;
+  }
+
+  label {
+    font-size: 14px;
+  }
+</style>
 </head>
 
 <body>
 
-  <div class="card">
-    <h2>🔔 Notification Experiment</h2>
+<div class="card">
+  <h2>🔔 Notification Experiment</h2>
 
-    <button class="primary" onclick="requestPermission()">Allow Notifications</button>
-    <button class="normal" onclick="normalNotification()">Normal Notification</button>
+  <button class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
 
-    <div class="controls">
-      <label>
-        Notifications to send:
-        <strong><span id="countLabel">50</span></strong>
-      </label>
-      <input
-        type="range"
-        min="5"
-        max="100"
-        value="50"
-        id="countSlider"
-        oninput="updateCount()"
-      >
-    </div>
+  <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+  <button class="normal" onclick="normalNotification()">Normal Notification</button>
 
-    <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
-    <button class="stop" onclick="stopAll()">🛑 Stop</button>
+  <label>
+    Notifications: <strong><span id="countLabel">30</span></strong>
+  </label>
+  <input type="range" min="5" max="100" value="30" id="slider" oninput="updateCount()">
 
-    <div class="progress">
-      <div class="bar" id="bar"></div>
-    </div>
+  <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
+  <button class="stop" onclick="stopAll()">🛑 Stop</button>
 
-    <div class="log" id="log">Ready.</div>
+  <div class="progress">
+    <div class="bar" id="bar"></div>
   </div>
 
-  <script>
-    const logBox = document.getElementById("log");
-    const bar = document.getElementById("bar");
-    const slider = document.getElementById("countSlider");
-    const label = document.getElementById("countLabel");
+  <div class="log" id="log">Status log ready.</div>
 
-    const timeouts = [];
-    let total = 50;
-    let done = 0;
+  <h4>🕘 Fake Notification History</h4>
+  <div class="history" id="history">No notifications yet.</div>
+</div>
 
-    function log(msg) {
-      logBox.innerHTML += "<br>" + msg;
-      logBox.scrollTop = logBox.scrollHeight;
+<script>
+  const logBox = document.getElementById("log");
+  const historyBox = document.getElementById("history");
+  const bar = document.getElementById("bar");
+  const slider = document.getElementById("slider");
+  const label = document.getElementById("countLabel");
+
+  let total = 30;
+  let done = 0;
+  const timeouts = [];
+
+  const messages = [
+    "Suspicious login detected",
+    "Password attempt blocked",
+    "Login from unknown location",
+    "Multiple failed logins",
+    "New device connected",
+    "Immediate action required",
+    "Security scan running"
+  ];
+
+  function log(msg) {
+    logBox.innerHTML += "<br>" + msg;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function addHistory(msg) {
+    if (historyBox.textContent.includes("No notifications")) {
+      historyBox.innerHTML = "";
+    }
+    historyBox.innerHTML += "• " + msg + "<br>";
+    historyBox.scrollTop = historyBox.scrollHeight;
+  }
+
+  function toggleDark() {
+    document.body.classList.toggle("dark");
+  }
+
+  function updateCount() {
+    total = Number(slider.value);
+    label.textContent = total;
+  }
+
+  function requestPermission() {
+    Notification.requestPermission().then(p => log("Permission: " + p));
+  }
+
+  function normalNotification() {
+    if (Notification.permission === "granted") {
+      new Notification("School Demo", { body: "Normal notification" });
+      log("Normal notification sent");
+      addHistory("Normal notification");
+    }
+  }
+
+  function fakeHacked() {
+    if (Notification.permission !== "granted") {
+      alert("Allow notifications first");
+      return;
     }
 
-    function updateCount() {
-      total = Number(slider.value);
-      label.textContent = total;
+    stopAll();
+    done = 0;
+    bar.style.width = "0%";
+    log("Fake hacked demo started");
+
+    for (let i = 1; i <= total; i++) {
+      const t = setTimeout(() => {
+        done++;
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        try {
+          new Notification("SECURITY ALERT (DEMO)", { body: msg });
+        } catch {}
+
+        bar.style.width = (done / total * 100) + "%";
+        log("Attempt " + done + "/" + total);
+        addHistory("SECURITY ALERT: " + msg);
+      }, i * 200);
+
+      timeouts.push(t);
     }
+  }
 
-    const messages = [
-      "Suspicious login detected",
-      "Password attempt blocked",
-      "Login from unknown location",
-      "Multiple failed logins",
-      "New device connected",
-      "Immediate action required",
-      "Security alert (demo)"
-    ];
-
-    function requestPermission() {
-      Notification.requestPermission().then(p => {
-        log("Permission: " + p);
-      });
-    }
-
-    function normalNotification() {
-      if (Notification.permission === "granted") {
-        new Notification("School Demo", {
-          body: "This is a normal notification"
-        });
-        log("Normal notification sent");
-      } else {
-        log("Permission not granted");
-      }
-    }
-
-    function fakeHacked() {
-      if (Notification.permission !== "granted") {
-        alert("Allow notifications first");
-        return;
-      }
-
-      stopAll();
-      done = 0;
-      bar.style.width = "0%";
-
-      log("⚠️ Fake hacked demo started (" + total + " attempts)");
-
-      for (let i = 1; i <= total; i++) {
-        const t = setTimeout(() => {
-          done++;
-          const msg = messages[Math.floor(Math.random() * messages.length)];
-          try {
-            new Notification("SECURITY ALERT (DEMO)", { body: msg });
-          } catch (e) {}
-
-          bar.style.width = (done / total * 100) + "%";
-          log(`Attempt ${done}/${total}`);
-        }, i * 200);
-
-        timeouts.push(t);
-      }
-    }
-
-    function stopAll() {
-      while (timeouts.length) {
-        clearTimeout(timeouts.pop());
-      }
-      log("🛑 Stopped");
-    }
-  </script>
+  function stopAll() {
+    while (timeouts.length) clearTimeout(timeouts.pop());
+    log("Stopped");
+  }
+</script>
 
 </body>
 </html>
