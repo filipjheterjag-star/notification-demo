@@ -12,7 +12,7 @@
     }
 
     .card {
-      max-width: 420px;
+      max-width: 440px;
       margin: auto;
       background: white;
       padding: 20px;
@@ -44,6 +44,30 @@
       height: 120px;
       overflow-y: auto;
     }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #ef4444;
+      transition: width 0.15s linear;
+    }
+
+    label {
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -54,19 +78,50 @@
 
     <button class="primary" onclick="requestPermission()">Allow Notifications</button>
     <button class="normal" onclick="normalNotification()">Normal Notification</button>
+
+    <div class="controls">
+      <label>
+        Notifications to send:
+        <strong><span id="countLabel">50</span></strong>
+      </label>
+      <input
+        type="range"
+        min="5"
+        max="100"
+        value="50"
+        id="countSlider"
+        oninput="updateCount()"
+      >
+    </div>
+
     <button class="danger" onclick="fakeHacked()">⚠️ Fake “Hacked” Demo</button>
     <button class="stop" onclick="stopAll()">🛑 Stop</button>
+
+    <div class="progress">
+      <div class="bar" id="bar"></div>
+    </div>
 
     <div class="log" id="log">Ready.</div>
   </div>
 
   <script>
     const logBox = document.getElementById("log");
+    const bar = document.getElementById("bar");
+    const slider = document.getElementById("countSlider");
+    const label = document.getElementById("countLabel");
+
     const timeouts = [];
+    let total = 50;
+    let done = 0;
 
     function log(msg) {
       logBox.innerHTML += "<br>" + msg;
       logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateCount() {
+      total = Number(slider.value);
+      label.textContent = total;
     }
 
     const messages = [
@@ -74,7 +129,7 @@
       "Password attempt blocked",
       "Login from unknown location",
       "Multiple failed logins",
-      " New device connected",
+      "New device connected",
       "Immediate action required",
       "Security alert (demo)"
     ];
@@ -102,15 +157,22 @@
         return;
       }
 
-      log("⚠️ Fake hacked demo started");
+      stopAll();
+      done = 0;
+      bar.style.width = "0%";
 
-      for (let i = 1; i <= 50; i++) {
+      log("⚠️ Fake hacked demo started (" + total + " attempts)");
+
+      for (let i = 1; i <= total; i++) {
         const t = setTimeout(() => {
+          done++;
           const msg = messages[Math.floor(Math.random() * messages.length)];
           try {
             new Notification("SECURITY ALERT (DEMO)", { body: msg });
           } catch (e) {}
-          log(`Attempt ${i}/50`);
+
+          bar.style.width = (done / total * 100) + "%";
+          log(`Attempt ${done}/${total}`);
         }, i * 200);
 
         timeouts.push(t);
@@ -121,7 +183,7 @@
       while (timeouts.length) {
         clearTimeout(timeouts.pop());
       }
-      log("🛑 Stopped all pending notifications");
+      log("🛑 Stopped");
     }
   </script>
 
