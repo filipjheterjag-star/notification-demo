@@ -32,6 +32,16 @@ button{
 .stop{background:#6b7280;color:#fff}
 .panelBtn{background:#0ea5e9;color:#fff}
 
+.notice{
+  margin-top:6px;
+  padding:8px;
+  background:#fde68a;
+  color:#92400e;
+  border-radius:6px;
+  font-size:13px;
+  text-align:center;
+}
+
 .row{margin-top:10px;font-size:14px}
 .badge{
   padding:3px 8px;border-radius:999px;font-size:12px;
@@ -94,6 +104,11 @@ button{
 <div class="main">
   <h2>🔔 Notification Experiment</h2>
 
+  <!-- PLATFORM NOTICE -->
+  <div class="notice">
+    ℹ️ Only supported for Chromebook at this point.
+  </div>
+
   <!-- EXPLANATION SECTION -->
   <button class="panelBtn" onclick="toggleInfo()">ℹ️ What is this demo?</button>
   <div id="infoBox" style="
@@ -149,7 +164,6 @@ button{
 
   <div class="log" id="log">Ready.</div>
 
-  <!-- FOOTER TEXT -->
   <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
@@ -236,8 +250,9 @@ function requestPermission(){
 function normalNotification(){
   if(Notification.permission!=="granted")return;
   attempts++;
-  try{new Notification("School Demo",{body:"Normal notification"});sent++;
-    addHistory("Normal notification");
+  try{
+    new Notification("School Demo",{body:"Normal notification"});
+    sent++;addHistory("Normal notification");
   }catch{}
   updateCounters();updateProtection();
 }
