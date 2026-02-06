@@ -3,17 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <title>Notification Demo</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 30px;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .primary { background: #4f46e5; color: white; }
+    .normal { background: #10b981; color: white; }
+    .danger { background: #ef4444; color: white; }
+    .stop   { background: #6b7280; color: white; }
+
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef2ff;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Notification Experiment</h2>
 
-  <button onclick="request()">Allow Notifications</button>
-  <button onclick="normal()">Normal Notification</button>
-  <button onclick="hacked()">⚠️ Fake “Hacked” Demo</button>
+  <div class="card">
+    <h2>🔔 Notification Experiment</h2>
+
+    <button class="primary" onclick="request()">Allow Notifications</button>
+    <button class="normal" onclick="normal()">Send Normal Notification</button>
+    <button class="danger" onclick="hacked()">⚠️ Fake “Hacked” Demo</button>
+    <button class="stop" onclick="stop()">🛑 Stop Demo</button>
+
+    <div class="status">
+      <strong>Status:</strong>
+      <div id="status">Idle</div>
+      <div id="count"></div>
+    </div>
+  </div>
 
   <script>
+    let interval = null;
+    let sent = 0;
+    const max = 50;
+
+    const messages = [
+      "⚠️ Suspicious login detected",
+      "🔐 Password attempt blocked",
+      "📍 Login from unknown location",
+      "🛑 Multiple failed logins",
+      "🔎 Scanning for threats",
+      "📡 New device connected",
+      "❗ Security verification required",
+      "🧪 Demo security alert"
+    ];
+
+    function updateStatus(text) {
+      document.getElementById("status").textContent = text;
+    }
+
+    function updateCount() {
+      document.getElementById("count").textContent =
+        sent ? `Notifications sent: ${sent}/${max}` : "";
+    }
+
     function request() {
-      Notification.requestPermission();
+      Notification.requestPermission().then(p => {
+        updateStatus("Permission: " + p);
+      });
     }
 
     function normal() {
@@ -30,37 +110,36 @@
         return;
       }
 
-      const messages = [
-        "⚠️ Suspicious login detected",
-        "🔐 Password attempt blocked",
-        "📍 Login from unknown location",
-        "⚠️ Multiple failed logins",
-        "🛑 Account security check running",
-        "🔎 Scanning for malware",
-        "⚠️ Unusual activity detected",
-        "📡 New device connected",
-        "❗ Immediate action recommended",
-        "🧪 Security system alert (demo)"
-      ];
+      if (interval) return;
 
-      let count = 0;
-      const max = 50;
+      sent = 0;
+      updateStatus("⚠️ Fake hacked demo running...");
+      updateCount();
 
-      const interval = setInterval(() => {
-        count++;
-
+      interval = setInterval(() => {
+        sent++;
         const msg = messages[Math.floor(Math.random() * messages.length)];
 
         new Notification("SECURITY ALERT (DEMO)", {
-          body: `${msg} (${count}/${max})`
+          body: `${msg} (${sent}/${max})`
         });
 
-        if (count >= max) {
-          clearInterval(interval);
+        updateCount();
+
+        if (sent >= max) {
+          stop();
         }
-      }, 1200); // ~50 notifications in 1 minute
+      }, 1200);
+    }
+
+    function stop() {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+        updateStatus("Stopped");
+      }
     }
   </script>
+
 </body>
 </html>
-
