@@ -102,7 +102,7 @@ Windows uses a visual preview.
 <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
-<!-- LEFT SIDEBAR: ACCOUNT -->
+<!-- LEFT SIDEBAR -->
 <div class="sidebar left" id="leftBar">
 <button class="panelBtn" onclick="toggleLeft()">❌ Close</button>
 
@@ -127,7 +127,7 @@ Notifications sent: <strong id="notifCount">0</strong>
 </div>
 </div>
 
-<!-- RIGHT SIDEBAR: CONTROLS -->
+<!-- RIGHT SIDEBAR -->
 <div class="sidebar right" id="rightBar">
 <button class="panelBtn" onclick="toggleRight()">❌ Close</button>
 <button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
@@ -163,76 +163,121 @@ rate limiting, and browser protection.
 <div id="toastArea"></div>
 
 <script>
+/* OS DETECT */
 const isWindows=/Win/i.test(navigator.userAgent);
 if(isWindows)windowsNotice.style.display="block";
 
-let speed=200,count=30;
-let currentUser=null;
+/* GLOBAL STATE */
+let speed=200,count=30,currentUser=null;
 const timeouts=[];
 const bar=document.getElementById("bar");
 
+/* UI TOGGLES */
 function toggleLeft(){leftBar.classList.toggle("open")}
 function toggleRight(){rightBar.classList.toggle("open")}
 function toggleDark(){document.body.classList.toggle("dark")}
 function toggleExplain(){explain.style.display=explain.style.display==="none"?"block":"none"}
 
+/* SLIDERS */
 speedSlider.oninput=()=>{speed=+speedSlider.value;speedLabel.textContent=speed}
 countSlider.oninput=()=>{count=+countSlider.value;countLabel.textContent=count}
 
+/* ACCOUNT SYSTEM (FIXED) */
+function getUsers(){
+  return JSON.parse(localStorage.getItem("users") || "{}");
+}
+function saveUsers(u){
+  localStorage.setItem("users", JSON.stringify(u));
+}
+
 function login(){
-  const u=userInput.value.trim(),p=passInput.value;
+  const u=userInput.value.trim();
+  const p=passInput.value;
   if(!u||!p)return alert("Enter username and password");
-  const users=JSON.parse(localStorage.users||"{}");
-  if(!users[u])users[u]={p,s:0};
-  if(users[u].p!==p)return alert("Wrong password");
-  localStorage.users=JSON.stringify(users);
-  currentUser=u;showAccount();
+
+  const users=getUsers();
+  if(!users[u]) users[u]={password:p,sent:0};
+  if(users[u].password!==p) return alert("Wrong password");
+
+  saveUsers(users);
+  currentUser=u;
+  showAccount();
 }
-function logout(){currentUser=null;authBox.style.display="block";accountBox.style.display="none"}
+
+function logout(){
+  currentUser=null;
+  authBox.style.display="block";
+  accountBox.style.display="none";
+}
+
 function showAccount(){
-  authBox.style.display="none";accountBox.style.display="block";
-  userLabel.textContent="Logged in as "+currentUser;updateStats();
-}
-function updateStats(){
-  const u=JSON.parse(localStorage.users||"{}")[currentUser];
-  notifCount.textContent=u.s;
-  statFill.style.width=Math.min(u.s,100)+"%";
-}
-function countSend(){
-  if(!currentUser)return;
-  const users=JSON.parse(localStorage.users);
-  users[currentUser].s++;localStorage.users=JSON.stringify(users);
+  authBox.style.display="none";
+  accountBox.style.display="block";
+  userLabel.textContent="Logged in as "+currentUser;
   updateStats();
 }
+
+function updateStats(){
+  if(!currentUser)return;
+  const users=getUsers();
+  const sent=users[currentUser]?.sent||0;
+  notifCount.textContent=sent;
+  statFill.style.width=Math.min(sent,100)+"%";
+}
+
+function countSend(){
+  if(!currentUser)return;
+  const users=getUsers();
+  users[currentUser].sent++;
+  saveUsers(users);
+  updateStats();
+}
+
+/* HISTORY */
 function addHistory(t){
   if(history.textContent.includes("No"))history.innerHTML="";
   history.innerHTML+="• "+t+"<br>";
 }
+
+/* NOTIFICATIONS */
 function toast(t,b){
   const d=document.createElement("div");
-  d.className="toast";d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
-  toastArea.appendChild(d);setTimeout(()=>d.remove(),3500);
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3500);
 }
+
 function send(t,b){
   if(isWindows)toast(t,b);
   else try{new Notification(t,{body:b})}catch{}
 }
+
 function requestPermission(){Notification.requestPermission()}
+
+/* ACTIONS */
 function sendOne(){
   send(titleInput.value||"Demo",textInput.value||"Hello");
-  addHistory(textInput.value||"Hello");countSend();
+  addHistory(textInput.value||"Hello");
+  countSend();
 }
+
 function startDemo(){
   stopAll();bar.style.width="0%";
   for(let i=1;i<=count;i++){
-    const t=setTimeout(()=>{
+    const to=setTimeout(()=>{
       send("SECURITY ALERT",textInput.value||"Alert");
       bar.style.width=(i/count*100)+"%";
-      addHistory("SECURITY ALERT");countSend();
-    },i*speed);timeouts.push(t);
+      addHistory("SECURITY ALERT");
+      countSend();
+    },i*speed);
+    timeouts.push(to);
   }
 }
-function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
+
+function stopAll(){
+  while(timeouts.length) clearTimeout(timeouts.pop());
+}
 </script>
 
 </body>
