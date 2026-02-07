@@ -21,11 +21,14 @@ body{
   padding:20px;border-radius:10px;
   box-shadow:0 10px 25px rgba(0,0,0,.15);
 }
-button{
+button,input{
   width:100%;padding:10px;margin-top:10px;
-  border:none;border-radius:6px;cursor:pointer;
-  font-size:15px;
+  border:none;border-radius:6px;font-size:15px;
 }
+input{
+  border:1px solid #9ca3af;
+}
+button{cursor:pointer}
 .primary{background:#4f46e5;color:#fff}
 .normal{background:#10b981;color:#fff}
 .danger{background:#ef4444;color:#fff}
@@ -59,7 +62,7 @@ button{
 
 .footer{margin-top:20px;text-align:center;font-size:13px;opacity:.7}
 
-/* WINDOWS VISUAL TOASTS (PREVIEW) */
+/* WINDOWS VISUAL TOASTS */
 #toastArea{
   position:fixed;right:16px;bottom:16px;z-index:3000;
   display:flex;flex-direction:column;gap:10px;pointer-events:none;
@@ -88,13 +91,18 @@ button{
 
   <div id="infoBox" style="display:none;margin-top:10px;padding:12px;background:var(--panel);border-radius:8px;font-size:14px">
     <strong>Explanation</strong><br><br>
-    This site demonstrates how browser notifications work and how browsers/OSes
-    protect users from spam. On Windows, a visual preview is used.
+    This site demonstrates how browser notifications work and browser protection
+    against spam. On Windows, a visual preview is used instead of real system notifications.
   </div>
 
   <button class="panelBtn" onclick="togglePanel()">⚙️ Open Panel</button>
 
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+
+  <!-- CUSTOM NORMAL NOTIFICATION TEXT -->
+  <div class="row">Normal notification text:</div>
+  <input id="normalText" placeholder="e.g. Homework reminder or Hello world">
+
   <button class="normal" onclick="normalNotification()">Normal Notification</button>
 
   <div class="row">Notifications to send: <strong><span id="countLabel">30</span></strong></div>
@@ -127,14 +135,13 @@ button{
   <div class="modalBox">
     <h3>❓ Why didn’t I get a notification?</h3>
     <p style="font-size:14px">
-      Windows limits notification spam at the OS level. This demo shows a visual
-      preview to represent what would have appeared.
+      Windows blocks notification spam at the OS level. This demo shows a visual
+      preview instead to demonstrate the concept safely.
     </p>
     <button class="panelBtn" onclick="closeHelp()">Close</button>
   </div>
 </div>
 
-<!-- WINDOWS TOAST AREA -->
 <div id="toastArea"></div>
 
 <script>
@@ -154,6 +161,7 @@ const blockedEl=document.getElementById("blocked");
 const protectionEl=document.getElementById("protection");
 const helpModal=document.getElementById("helpModal");
 const toastArea=document.getElementById("toastArea");
+const normalInput=document.getElementById("normalText");
 
 let total=30,done=0,attempts=0,sent=0;
 const timeouts=[];
@@ -191,7 +199,7 @@ function showToast(title, body){
 function sendNotification(title, body){
   if(isWindows){
     showToast(title, body);
-    sent++; // preview counts as sent for demo
+    sent++;
   }else{
     try{new Notification(title,{body});sent++;}catch{}
   }
@@ -200,11 +208,17 @@ function sendNotification(title, body){
 function requestPermission(){
   Notification.requestPermission().then(p=>{log("Permission: "+p);updateProtection()});
 }
+
 function normalNotification(){
   if(!isWindows && Notification.permission!=="granted") return;
-  attempts++; sendNotification("School Demo","Normal notification");
-  addHistory("Normal notification"); updateCounters(); updateProtection();
+  const text = normalInput.value.trim() || "Normal notification";
+  attempts++;
+  sendNotification("School Demo", text);
+  addHistory(text);
+  updateCounters();
+  updateProtection();
 }
+
 function startHackedDemo(){
   if(!isWindows && Notification.permission!=="granted"){alert("Allow notifications first");return;}
   stopAll();done=attempts=sent=0;bar.style.width="0%";statusText.textContent="Sending…";
@@ -221,6 +235,7 @@ function startHackedDemo(){
     timeouts.push(t);
   }
 }
+
 function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop());statusText.textContent="Stopped"}
 </script>
 
