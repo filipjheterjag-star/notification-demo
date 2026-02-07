@@ -44,7 +44,8 @@ button{border:none;cursor:pointer}
 <h2>🔔 Notification Experiment</h2>
 
 <div class="notice" id="windowsNotice">
-Only supported for Chromebook at this point.<br>Windows uses a visual preview.
+Only supported for Chromebook at this point.<br>
+Windows uses a visual preview.
 </div>
 
 <button class="primary" onclick="requestPermission()">Allow Notifications</button>
@@ -69,7 +70,7 @@ Only supported for Chromebook at this point.<br>Windows uses a visual preview.
 
 <div id="loginBox">
 <input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+<input id="password" type="password">
 <button class="panelBtn" onclick="login()">Login / Create</button>
 </div>
 
@@ -80,6 +81,9 @@ Only supported for Chromebook at this point.<br>Windows uses a visual preview.
 <div class="section">
 Notifications sent: <strong id="sentCount">0</strong>
 <div class="statbar"><div class="statfill" id="statFill"></div></div>
+<div style="font-size:12px;opacity:.7;margin-top:6px">
+⚠️ Stats may be inaccurate right now.
+</div>
 </div>
 </div>
 </div>
@@ -105,6 +109,25 @@ Count <span id="countVal">30</span>
 <div class="section">
 <div class="history" id="history">No notifications yet.</div>
 </div>
+
+<!-- HELP / INFO -->
+<div class="section">
+<button class="panelBtn" onclick="toggleHelp()">❓ Why didn’t I get a notification?</button>
+<div id="helpBox" style="display:none;font-size:13px;background:var(--panel);padding:10px;border-radius:6px;margin-top:8px">
+• Notification permission not granted<br>
+• Windows blocks fake system notifications<br>
+• This site uses visual previews on Windows<br>
+• Chromebook works best
+</div>
+</div>
+
+<div class="section">
+<button class="panelBtn" onclick="toggleExplain()">ℹ️ What’s this?</button>
+<div id="explainBox" style="display:none;font-size:13px;background:var(--panel);padding:10px;border-radius:6px;margin-top:8px">
+This is a browser notification experiment used for testing and demos.
+No real system access is used.
+</div>
+</div>
 </div>
 
 <div id="toastArea"></div>
@@ -125,27 +148,21 @@ function toggleRight(){rightBar.classList.toggle("open")}
 function toggleDark(){document.body.classList.toggle("dark")}
 
 /* USERS */
-/* ⚠ NOTE: The notification stats feature is currently bugged */
 function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
 function saveUsers(u){localStorage.setItem("users",JSON.stringify(u))}
 
 function login(){
   const u=username.value.trim(),p=password.value;
   if(!u||!p)return alert("Enter both fields");
-
   const users=loadUsers();
   if(!users[u]) users[u]={password:p,sent:0};
   if(users[u].password!==p) return alert("Wrong password");
-
   currentUser=u;
   saveUsers(users);
   updateUI();
 }
 
-function logout(){
-  currentUser=null;
-  updateUI();
-}
+function logout(){currentUser=null;updateUI()}
 
 function updateUI(){
   if(currentUser){
@@ -198,15 +215,21 @@ function send(t,b){
   else try{new Notification(t,{body:b})}catch{}
 }
 
+/* HELP TOGGLES */
+function toggleHelp(){
+  helpBox.style.display=helpBox.style.display==="none"?"block":"none";
+}
+function toggleExplain(){
+  explainBox.style.display=explainBox.style.display==="none"?"block":"none";
+}
+
 /* ACTIONS */
 function requestPermission(){Notification.requestPermission()}
-
 function sendOne(){
   send(titleInput.value||"Demo",msgInput.value||"Hello");
   log(msgInput.value||"Hello");
   incrementStat();
 }
-
 function startDemo(){
   stopAll();bar.style.width="0%";
   for(let i=1;i<=count;i++){
@@ -219,7 +242,6 @@ function startDemo(){
     timeouts.push(to);
   }
 }
-
 function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
 </script>
 
