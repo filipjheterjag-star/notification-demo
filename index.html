@@ -1,69 +1,36 @@
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
-/* =========================
-   ENV
-========================= */
+/* ================= OS DETECT ================= */
 const isWindows = /Win/i.test(navigator.userAgent);
-const isGithub = location.hostname.includes("github.io");
+if (isWindows && window.windowsNotice) {
+  windowsNotice.style.display = "block";
+}
 
-const windowsNotice = document.getElementById("windowsNotice");
-if (isWindows && windowsNotice) windowsNotice.style.display = "block";
-
-/* =========================
-   ELEMENTS
-========================= */
-const leftBar   = document.getElementById("leftBar");
-const rightBar  = document.getElementById("rightBar");
-const loginBox  = document.getElementById("loginBox");
-const userBox   = document.getElementById("userBox");
-const userLabel = document.getElementById("userLabel");
-const sentCount = document.getElementById("sentCount");
-const statFill  = document.getElementById("statFill");
-const historyEl = document.getElementById("history");
-const bar       = document.getElementById("bar");
-const toastArea = document.getElementById("toastArea");
-
-const titleInput = document.getElementById("titleInput");
-const msgInput   = document.getElementById("msgInput");
-
-const speedSlider = document.getElementById("speed");
-const countSlider = document.getElementById("count");
-const speedVal    = document.getElementById("speedVal");
-const countVal    = document.getElementById("countVal");
-
-const username = document.getElementById("username");
-const password = document.getElementById("password");
-
-/* =========================
-   STATE
-========================= */
+/* ================= STATE ================= */
 let currentUser = null;
 let speed = 200;
 let count = 30;
-const timeouts = [];
+let timeouts = [];
 
-/* =========================
-   SIDEBARS
-========================= */
-window.toggleLeft  = () => leftBar?.classList.toggle("open");
-window.toggleRight = () => rightBar?.classList.toggle("open");
-window.toggleDark  = () => document.body.classList.toggle("dark");
-
-/* =========================
-   USERS
-========================= */
-function loadUsers(){
-  try { return JSON.parse(localStorage.getItem("users")) || {}; }
-  catch { return {}; }
+/* ================= SIDEBARS ================= */
+function toggleLeft() {
+  leftBar.classList.toggle("open");
+}
+function toggleRight() {
+  rightBar.classList.toggle("open");
+}
+function toggleDark() {
+  document.body.classList.toggle("dark");
 }
 
-function saveUsers(users){
-  try { localStorage.setItem("users", JSON.stringify(users)); }
-  catch {}
+/* ================= USERS ================= */
+function loadUsers() {
+  return JSON.parse(localStorage.getItem("users") || "{}");
+}
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
 }
 
-window.login = () => {
+function login() {
   const u = username.value.trim();
   const p = password.value;
   if (!u || !p) return alert("Enter both fields");
@@ -75,14 +42,14 @@ window.login = () => {
   currentUser = u;
   saveUsers(users);
   updateUI();
-};
+}
 
-window.logout = () => {
+function logout() {
   currentUser = null;
   updateUI();
-};
+}
 
-function updateUI(){
+function updateUI() {
   if (currentUser) {
     loginBox.style.display = "none";
     userBox.style.display = "block";
@@ -94,7 +61,7 @@ function updateUI(){
   }
 }
 
-function updateStats(){
+function updateStats() {
   if (!currentUser) return;
   const users = loadUsers();
   const sent = users[currentUser]?.sent || 0;
@@ -102,99 +69,82 @@ function updateStats(){
   statFill.style.width = Math.min(sent, 100) + "%";
 }
 
-function incrementStat(){
+function incrementStat() {
   if (!currentUser) return;
   const users = loadUsers();
-  users[currentUser].sent++;
+  users[currentUser].sent = (users[currentUser].sent || 0) + 1;
   saveUsers(users);
   updateStats();
 }
 
-/* =========================
-   CONTROLS
-========================= */
-if (speedSlider) {
-  speedSlider.oninput = () => {
-    speed = +speedSlider.value;
-    speedVal.textContent = speed;
-  };
+/* ================= CONTROLS ================= */
+speed.oninput = () => {
+  speed = +speed.value;
+  speedVal.textContent = speed;
+};
+count.oninput = () => {
+  count = +count.value;
+  countVal.textContent = count;
+};
+
+/* ================= HISTORY ================= */
+function log(msg) {
+  if (history.textContent.includes("No notifications")) {
+    history.innerHTML = "";
+  }
+  history.innerHTML += "• " + msg + "<br>";
 }
 
-if (countSlider) {
-  countSlider.oninput = () => {
-    count = +countSlider.value;
-    countVal.textContent = count;
-  };
+/* ================= NOTIFICATIONS ================= */
+function toast(title, body) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<strong>${title}</strong><div>${body}</div>`;
+  toastArea.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
 
-/* =========================
-   HISTORY
-========================= */
-function log(msg){
-  if (historyEl.textContent.includes("No notifications"))
-    historyEl.innerHTML = "";
-  historyEl.innerHTML += "• " + msg + "<br>";
-}
-
-/* =========================
-   NOTIFICATIONS (FIXED)
-========================= */
-function toast(title, body){
-  const d = document.createElement("div");
-  d.className = "toast";
-  d.innerHTML = `<strong>${title}</strong><div>${body}</div>`;
-  toastArea.appendChild(d);
-  setTimeout(() => d.remove(), 3000);
-}
-
-/* 🔑 SINGLE PIPELINE */
-function send(title, body){
-  incrementStat();
-
-  if (isWindows || isGithub) {
+function sendNotification(title, body) {
+  if (isWindows) {
     toast(title, body);
-  } else {
-    try {
-      new Notification(title, { body });
-    } catch {
-      toast(title, body);
-    }
+  } else if (Notification.permission === "granted") {
+    new Notification(title, { body });
   }
 }
 
-/* =========================
-   ACTIONS (EXPOSED)
-========================= */
-window.requestPermission = () => {
-  if ("Notification" in window)
-    Notification.requestPermission();
-};
+/* ================= ACTIONS ================= */
+function requestPermission() {
+  Notification.requestPermission();
+}
 
-window.sendOne = () => {
-  send(titleInput.value || "Demo",
-       msgInput.value || "Hello");
-  log(msgInput.value || "Hello");
-};
+function sendOne() {
+  const t = titleInput.value || "Demo";
+  const m = msgInput.value || "Hello";
 
-window.startDemo = () => {
+  sendNotification(t, m);
+  log(m);
+  incrementStat();
+}
+
+function startDemo() {
   stopAll();
   bar.style.width = "0%";
 
   for (let i = 1; i <= count; i++) {
-    const t = setTimeout(() => {
-      send("SECURITY ALERT",
-           msgInput.value || "Alert");
-      bar.style.width = (i / count * 100) + "%";
+    const id = setTimeout(() => {
+      sendNotification("SECURITY ALERT", msgInput.value || "Alert");
+      bar.style.width = (i / count) * 100 + "%";
       log("SECURITY ALERT");
+      incrementStat();
     }, i * speed);
-    timeouts.push(t);
+
+    timeouts.push(id);
   }
-};
+}
 
-window.stopAll = () => {
-  while (timeouts.length)
+function stopAll() {
+  while (timeouts.length) {
     clearTimeout(timeouts.pop());
-};
-
-});
+  }
+}
 </script>
