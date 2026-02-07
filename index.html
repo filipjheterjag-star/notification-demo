@@ -44,7 +44,8 @@ button{border:none;cursor:pointer}
 <h2>🔔 Notification Experiment</h2>
 
 <div class="notice" id="windowsNotice">
-Only supported for Chromebook at this point.<br>Windows uses a visual preview.
+Only supported for Chromebook at this point.<br>
+Windows uses a visual preview.
 </div>
 
 <button class="primary" onclick="requestPermission()">Allow Notifications</button>
@@ -69,18 +70,13 @@ Only supported for Chromebook at this point.<br>Windows uses a visual preview.
 
 <div id="loginBox">
 <input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+<input id="password" type="password">
 <button class="panelBtn" onclick="login()">Login / Create</button>
 </div>
 
 <div id="userBox" style="display:none">
 <strong id="userLabel"></strong>
 <button class="panelBtn" onclick="logout()">Log out</button>
-
-<div class="section">
-Notifications sent: <strong id="sentCount">0</strong>
-<div class="statbar"><div class="statfill" id="statFill"></div></div>
-</div>
 </div>
 </div>
 </div>
@@ -96,10 +92,11 @@ Notifications sent: <strong id="sentCount">0</strong>
 </div>
 
 <div class="section">
-Speed <span id="speedVal">200</span> ms
-<input type="range" min="100" max="2000" step="100" value="200" id="speed">
-Count <span id="countVal">30</span>
-<input type="range" min="5" max="100" value="30" id="count">
+Speed <strong><span id="speedVal"></span> ms</strong>
+<input type="range" min="100" max="2000" step="100" id="speed">
+
+Count <strong><span id="countVal"></span></strong>
+<input type="range" min="5" max="100" id="count">
 </div>
 
 <div class="section">
@@ -111,76 +108,45 @@ Count <span id="countVal">30</span>
 
 <script>
 /* OS */
-const isWindows=/Win/i.test(navigator.userAgent);
-if(isWindows)windowsNotice.style.display="block";
+const isWindows = /Win/i.test(navigator.userAgent);
+if (isWindows) windowsNotice.style.display = "block";
 
 /* STATE */
-let currentUser=null;
-let speed=200,count=30;
-const timeouts=[];
+let speed = 200;
+let count = 30;
+const timeouts = [];
+
+/* INIT SLIDERS (FIXES WEIRD BEHAVIOR) */
+speed.value = speed;
+count.value = count;
+speedVal.textContent = speed;
+countVal.textContent = count;
 
 /* SIDEBARS */
-function toggleLeft(){leftBar.classList.toggle("open")}
-function toggleRight(){rightBar.classList.toggle("open")}
-function toggleDark(){document.body.classList.toggle("dark")}
+function toggleLeft(){ leftBar.classList.toggle("open"); }
+function toggleRight(){ rightBar.classList.toggle("open"); }
+function toggleDark(){ document.body.classList.toggle("dark"); }
 
-/* USERS (SIMPLE + RELIABLE) */
-function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
-function saveUsers(u){localStorage.setItem("users",JSON.stringify(u))}
-
+/* ACCOUNT (DEMO ONLY) */
 function login(){
-  const u=username.value.trim(),p=password.value;
-  if(!u||!p)return alert("Enter both fields");
-
-  const users=loadUsers();
-  if(!users[u]) users[u]={password:p,sent:0};
-  if(users[u].password!==p) return alert("Wrong password");
-
-  currentUser=u;
-  saveUsers(users);
-  updateUI();
+  if(!username.value || !password.value) return alert("Enter both fields");
+  loginBox.style.display="none";
+  userBox.style.display="block";
+  userLabel.textContent="Logged in as "+username.value;
 }
-
 function logout(){
-  currentUser=null;
-  updateUI();
-}
-
-function updateUI(){
-  if(currentUser){
-    loginBox.style.display="none";
-    userBox.style.display="block";
-    userLabel.textContent="Logged in as "+currentUser;
-    updateStats();
-  }else{
-    loginBox.style.display="block";
-    userBox.style.display="none";
-  }
-}
-
-function updateStats(){
-  const users=loadUsers();
-  const sent=users[currentUser]?.sent||0;
-  sentCount.textContent=sent;
-  statFill.style.width=Math.min(sent,100)+"%";
-}
-
-function incrementStat(){
-  if(!currentUser)return;
-  const users=loadUsers();
-  users[currentUser].sent++;
-  saveUsers(users);
-  updateStats();
+  loginBox.style.display="block";
+  userBox.style.display="none";
 }
 
 /* CONTROLS */
-speed.oninput=()=>{speed=+speed.value;speedVal.textContent=speed}
-count.oninput=()=>{count=+count.value;countVal.textContent=count}
+speed.oninput=()=>{ speed=+speed.value; speedVal.textContent=speed; };
+count.oninput=()=>{ count=+count.value; countVal.textContent=count; };
 
 /* HISTORY */
 function log(msg){
-  if(history.textContent.includes("No"))history.innerHTML="";
-  history.innerHTML+="• "+msg+"<br>";
+  if(history.textContent.includes("No")) history.innerHTML="";
+  history.innerHTML += "• "+msg+"<br>";
 }
 
 /* NOTIFICATIONS */
@@ -191,35 +157,31 @@ function toast(t,b){
   toastArea.appendChild(d);
   setTimeout(()=>d.remove(),3000);
 }
-
 function send(t,b){
-  if(isWindows)toast(t,b);
-  else try{new Notification(t,{body:b})}catch{}
+  if(isWindows) toast(t,b);
+  else if(Notification.permission==="granted") new Notification(t,{body:b});
 }
 
 /* ACTIONS */
-function requestPermission(){Notification.requestPermission()}
+function requestPermission(){ Notification.requestPermission(); }
 
 function sendOne(){
   send(titleInput.value||"Demo",msgInput.value||"Hello");
   log(msgInput.value||"Hello");
-  incrementStat();
 }
 
 function startDemo(){
-  stopAll();bar.style.width="0%";
+  stopAll(); bar.style.width="0%";
   for(let i=1;i<=count;i++){
     const to=setTimeout(()=>{
       send("SECURITY ALERT",msgInput.value||"Alert");
       bar.style.width=(i/count*100)+"%";
       log("SECURITY ALERT");
-      incrementStat();
     },i*speed);
     timeouts.push(to);
   }
 }
-
-function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
+function stopAll(){ while(timeouts.length) clearTimeout(timeouts.pop()); }
 </script>
 
 </body>
