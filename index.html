@@ -2,27 +2,90 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Notification Demo</title>
+<title>Notification Experiment</title>
 
 <style>
-body{margin:0;padding:20px;font-family:Arial;background:#f4f6f8}
-.main{max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:12px}
-button,input{width:100%;padding:10px;margin-top:10px;font-size:15px}
-.primary{background:#4f46e5;color:#fff;border:none}
-.normal{background:#10b981;color:#fff;border:none}
-.danger{background:#ef4444;color:#fff;border:none}
-.stop{background:#6b7280;color:#fff;border:none}
-
-.sidebar{
-  position:fixed;top:0;right:0;width:300px;height:100%;
-  background:#fff;padding:20px;
-  transform:translateX(100%);
-  transition:.3s;box-shadow:-5px 0 20px rgba(0,0,0,.2)
+body{
+  margin:0;
+  padding:20px;
+  font-family:Arial, sans-serif;
+  background:#f4f6f8;
+  color:#111;
 }
-.sidebar.open{transform:translateX(0)}
-
-.progress{height:10px;background:#ddd;margin-top:10px}
-.bar{height:100%;width:0;background:#ef4444}
+.main{
+  max-width:520px;
+  margin:auto;
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+button,input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:6px;
+  font-size:15px;
+  border:none;
+}
+.blue{background:#2563eb;color:#fff}
+.green{background:#10b981;color:#fff}
+.red{background:#ef4444;color:#fff}
+.gray{background:#6b7280;color:#fff}
+.notice{
+  background:#fde68a;
+  color:#92400e;
+  padding:8px;
+  border-radius:6px;
+  font-size:13px;
+  margin-bottom:10px;
+}
+.progress{
+  width:100%;
+  height:12px;
+  background:#e5e7eb;
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.bar{
+  height:100%;
+  width:0%;
+  background:#ef4444;
+}
+.status{
+  font-size:14px;
+  margin-top:10px;
+}
+.footer{
+  text-align:center;
+  font-size:13px;
+  opacity:.7;
+  margin-top:20px;
+}
+#toastArea{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.toast{
+  width:320px;
+  background:#111827;
+  color:#e5e7eb;
+  padding:12px;
+  border-radius:10px;
+}
+.popup{
+  display:none;
+  background:#eef2ff;
+  padding:10px;
+  border-radius:6px;
+  margin-top:6px;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -31,81 +94,129 @@ button,input{width:100%;padding:10px;margin-top:10px;font-size:15px}
 <div class="main">
 <h2>🔔 Notification Experiment</h2>
 
-<button class="primary" onclick="requestPermission()">Allow Notifications</button>
-<button class="normal" onclick="sendOne()">Send Notification</button>
-<button class="danger" onclick="startDemo()">Fake “Hacked” Demo</button>
-<button class="stop" onclick="stopAll()">Stop</button>
+<div class="notice" id="windowsNotice" style="display:none">
+🪟 Windows detected. Using visual notification preview (simulation).
+</div>
+
+<button class="blue" onclick="toggleExplain()">ℹ️ What is this demo?</button>
+<div class="popup" id="explainBox">
+This is a **browser notification demo** showing how alerts behave depending on OS and permissions.
+</div>
+
+<button class="blue" onclick="toggleHelp()">❓ Why didn’t I get a notification?</button>
+<div class="popup" id="helpBox">
+• Notifications blocked by browser  
+• Page not allowed  
+• Windows uses a visual preview instead
+</div>
+
+<button class="blue" onclick="openPanel()">⚙️ Open Panel</button>
+
+<button class="blue" onclick="requestPermission()">Allow Notifications</button>
+
+<label style="margin-top:10px;display:block">Normal notification text:</label>
+<input id="msgInput" placeholder="test">
+
+<button class="green" onclick="sendOne()">Normal Notification</button>
+
+<div style="margin-top:10px">Notifications to send: <strong id="countLabel">30</strong></div>
+
+<button class="red" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
+<button class="gray" onclick="stopAll()">🛑 Stop</button>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
-<button onclick="toggleControls()">⚙️ Controls</button>
+<div class="status">
+Status: <strong id="status">Ready</strong><br>
+Attempts: <span id="attempts">0</span> |
+Sent: <span id="sent">0</span> |
+Blocked: <span id="blocked">0</span><br>
+Browser protection: <span style="color:green">Allowed</span>
 </div>
 
-<div class="sidebar" id="controls">
-<h3>Controls</h3>
-
-Title
-<input id="titleInput" value="Demo">
-
-Message
-<input id="msgInput" value="Hello">
-
-Speed: <span id="speedVal">200</span> ms
-<input type="range" min="100" max="2000" step="100" value="200" id="speed">
-
-Count: <span id="countVal">30</span>
-<input type="range" min="5" max="100" value="30" id="count">
+<div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
+
+<div id="toastArea"></div>
 
 <script>
-let speed=200, count=30;
-let timers=[];
+const isWindows=/Win/i.test(navigator.userAgent);
+if(isWindows) windowsNotice.style.display="block";
 
-const speedSlider=document.getElementById("speed");
-const countSlider=document.getElementById("count");
-const speedVal=document.getElementById("speedVal");
-const countVal=document.getElementById("countVal");
+let count=30;
+let attempts=0,sent=0,blocked=0;
+let running=false;
+let timeouts=[];
 
-speedSlider.oninput=()=>{
-  speed=speedSlider.value;
-  speedVal.textContent=speed;
-};
-countSlider.oninput=()=>{
-  count=countSlider.value;
-  countVal.textContent=count;
-};
-
-function toggleControls(){
-  document.getElementById("controls").classList.toggle("open");
+function toggleExplain(){
+  explainBox.style.display=
+    explainBox.style.display==="block"?"none":"block";
+}
+function toggleHelp(){
+  helpBox.style.display=
+    helpBox.style.display==="block"?"none":"block";
+}
+function openPanel(){
+  alert("Panel opened (demo)");
 }
 
 function requestPermission(){
   Notification.requestPermission();
 }
 
-function sendOne(){
-  if(Notification.permission==="granted"){
-    new Notification(titleInput.value,{body:msgInput.value});
+function toast(t,b){
+  const d=document.createElement("div");
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+
+function send(t,b){
+  attempts++;
+  if(isWindows){
+    toast(t,b);
+    sent++;
+  }else if(Notification.permission==="granted"){
+    new Notification(t,{body:b});
+    sent++;
+  }else{
+    blocked++;
   }
+  updateStats();
+}
+
+function sendOne(){
+  send("Notification",msgInput.value||"test");
 }
 
 function startDemo(){
   stopAll();
+  running=true;
+  status.textContent="Running";
   bar.style.width="0%";
+
   for(let i=1;i<=count;i++){
-    const t=setTimeout(()=>{
-      if(Notification.permission==="granted"){
-        new Notification("SECURITY ALERT",{body:msgInput.value});
-      }
+    const to=setTimeout(()=>{
+      if(!running) return;
+      send("SECURITY ALERT",msgInput.value||"Alert");
       bar.style.width=(i/count*100)+"%";
-    },i*speed);
-    timers.push(t);
+      if(i===count) status.textContent="Completed";
+    },i*150);
+    timeouts.push(to);
   }
 }
 
 function stopAll(){
-  timers.forEach(clearTimeout);
-  timers=[];
+  running=false;
+  status.textContent="Stopped";
+  while(timeouts.length) clearTimeout(timeouts.pop());
+}
+
+function updateStats(){
+  attempts.textContent=attempts;
+  sent.textContent=sent;
+  blocked.textContent=blocked;
 }
 </script>
 
