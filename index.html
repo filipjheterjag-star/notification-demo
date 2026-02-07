@@ -1,226 +1,105 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Notification Demo</title>
-
-<style>
-:root{--bg:#f4f6f8;--card:#fff;--text:#000;--panel:#eef2ff}
-body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--panel:#020617}
-body{margin:0;padding:20px;font-family:Arial;background:var(--bg);color:var(--text)}
-.main{max-width:520px;margin:auto;background:var(--card);padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
-button,input{width:100%;padding:10px;margin-top:10px;border-radius:6px;font-size:15px}
-button{border:none;cursor:pointer}
-.primary{background:#4f46e5;color:#fff}
-.normal{background:#10b981;color:#fff}
-.danger{background:#ef4444;color:#fff}
-.stop{background:#6b7280;color:#fff}
-.panelBtn{background:#0ea5e9;color:#fff}
-.notice{padding:8px;background:#fde68a;color:#92400e;border-radius:6px;font-size:13px;display:none}
-.progress{width:100%;height:14px;background:#374151;border-radius:7px;overflow:hidden;margin-top:10px}
-.bar{height:100%;width:0%;background:#ef4444}
-.footer{text-align:center;font-size:13px;opacity:.7;margin-top:20px}
-
-/* SIDEBARS */
-.sidebar{position:fixed;top:0;width:320px;height:100%;background:var(--card);padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.25);transition:.3s;overflow-y:auto;z-index:1000}
-.left{left:0;transform:translateX(-100%)}
-.right{right:0;transform:translateX(100%)}
-.sidebar.open{transform:translateX(0)}
-
-.section{margin-top:20px}
-.history{background:var(--panel);padding:10px;border-radius:6px;font-size:13px;max-height:160px;overflow-y:auto}
-.statbar{height:12px;background:#374151;border-radius:6px;overflow:hidden;margin-top:6px}
-.statfill{height:100%;width:0%;background:#22c55e}
-
-/* WINDOWS PREVIEW */
-#toastArea{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:3000}
-.toast{width:320px;background:#111827;color:#e5e7eb;border-radius:10px;padding:12px}
-</style>
-</head>
-
-<body>
-
-<div class="main">
-<h2>🔔 Notification Experiment</h2>
-
-<div class="notice" id="windowsNotice">
-Only supported for Chromebook at this point.<br>Windows uses a visual preview.
-</div>
-
-<button class="primary" onclick="requestPermission()">Allow Notifications</button>
-<button class="normal" onclick="sendOne()">Send Notification</button>
-<button class="danger" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
-<button class="stop" onclick="stopAll()">🛑 Stop</button>
-
-<div class="progress"><div class="bar" id="bar"></div></div>
-
-<button class="panelBtn" onclick="toggleLeft()">👤 Account & Stats</button>
-<button class="panelBtn" onclick="toggleRight()">⚙️ Controls</button>
-
-<div class="footer">© Copyright FilipoPencil 2026</div>
-</div>
-
-<!-- LEFT SIDEBAR -->
-<div class="sidebar left" id="leftBar">
-<button class="panelBtn" onclick="toggleLeft()">❌ Close</button>
-
-<div class="section">
-<h3>👤 Account (Demo)</h3>
-
-<div id="loginBox">
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button class="panelBtn" onclick="login()">Login / Create</button>
-</div>
-
-<div id="userBox" style="display:none">
-<strong id="userLabel"></strong>
-<button class="panelBtn" onclick="logout()">Log out</button>
-
-<div class="section">
-Notifications sent: <strong id="sentCount">0</strong>
-<div class="statbar"><div class="statfill" id="statFill"></div></div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- RIGHT SIDEBAR -->
-<div class="sidebar right" id="rightBar">
-<button class="panelBtn" onclick="toggleRight()">❌ Close</button>
-<button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
-
-<div class="section">
-<input id="titleInput" placeholder="Title">
-<input id="msgInput" placeholder="Message">
-</div>
-
-<div class="section">
-Speed <span id="speedVal">200</span> ms
-<input type="range" min="100" max="2000" step="100" value="200" id="speed">
-Count <span id="countVal">30</span>
-<input type="range" min="5" max="100" value="30" id="count">
-</div>
-
-<div class="section">
-<div class="history" id="history">No notifications yet.</div>
-</div>
-</div>
-
-<div id="toastArea"></div>
-
-<script>
-/* OS */
-const isWindows=/Win/i.test(navigator.userAgent);
-if(isWindows)windowsNotice.style.display="block";
-
-/* STATE */
-let currentUser=null;
-let speed=200,count=30;
-const timeouts=[];
-
-/* SIDEBARS */
-function toggleLeft(){leftBar.classList.toggle("open")}
-function toggleRight(){rightBar.classList.toggle("open")}
-function toggleDark(){document.body.classList.toggle("dark")}
-
-/* USERS (SIMPLE + RELIABLE) */
-function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
-function saveUsers(u){localStorage.setItem("users",JSON.stringify(u))}
-
-function login(){
-  const u=username.value.trim(),p=password.value;
-  if(!u||!p)return alert("Enter both fields");
-
-  const users=loadUsers();
-  if(!users[u]) users[u]={password:p,sent:0};
-  if(users[u].password!==p) return alert("Wrong password");
-
-  currentUser=u;
-  saveUsers(users);
-  updateUI();
+/* ================= OS ================= */
+const isWindows = /Win/i.test(navigator.userAgent);
+if (isWindows && window.windowsNotice) {
+  windowsNotice.style.display = "block";
 }
 
-function logout(){
-  currentUser=null;
-  updateUI();
+/* ================= STATE ================= */
+let speed = 200;
+let count = 30;
+let timeouts = [];
+
+/* ================= SIDEBARS ================= */
+function toggleLeft() {
+  leftBar.classList.toggle("open");
+}
+function toggleRight() {
+  rightBar.classList.toggle("open");
+}
+function toggleDark() {
+  document.body.classList.toggle("dark");
 }
 
-function updateUI(){
-  if(currentUser){
-    loginBox.style.display="none";
-    userBox.style.display="block";
-    userLabel.textContent="Logged in as "+currentUser;
-    updateStats();
-  }else{
-    loginBox.style.display="block";
-    userBox.style.display="none";
+/* ================= ACCOUNT ================= */
+/* ⚠️ NOTE: The notification stats feature is currently bugged */
+function login() {
+  const u = username.value.trim();
+  const p = password.value;
+  if (!u || !p) return alert("Enter both fields");
+
+  loginBox.style.display = "none";
+  userBox.style.display = "block";
+  userLabel.textContent = "Logged in as " + u;
+}
+
+function logout() {
+  loginBox.style.display = "block";
+  userBox.style.display = "none";
+}
+
+/* ================= CONTROLS ================= */
+speed.oninput = () => {
+  speed = +speed.value;
+  speedVal.textContent = speed;
+};
+count.oninput = () => {
+  count = +count.value;
+  countVal.textContent = count;
+};
+
+/* ================= HISTORY ================= */
+function log(msg) {
+  if (history.textContent.includes("No notifications")) {
+    history.innerHTML = "";
+  }
+  history.innerHTML += "• " + msg + "<br>";
+}
+
+/* ================= NOTIFICATIONS ================= */
+function toast(title, body) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<strong>${title}</strong><div>${body}</div>`;
+  toastArea.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function sendNotification(title, body) {
+  if (isWindows) {
+    toast(title, body);
+  } else if (Notification.permission === "granted") {
+    new Notification(title, { body });
   }
 }
 
-function updateStats(){
-  const users=loadUsers();
-  const sent=users[currentUser]?.sent||0;
-  sentCount.textContent=sent;
-  statFill.style.width=Math.min(sent,100)+"%";
+/* ================= ACTIONS ================= */
+function requestPermission() {
+  Notification.requestPermission();
 }
 
-function incrementStat(){
-  if(!currentUser)return;
-  const users=loadUsers();
-  users[currentUser].sent++;
-  saveUsers(users);
-  updateStats();
+function sendOne() {
+  const t = titleInput.value || "Demo";
+  const m = msgInput.value || "Hello";
+  sendNotification(t, m);
+  log(m);
 }
 
-/* CONTROLS */
-speed.oninput=()=>{speed=+speed.value;speedVal.textContent=speed}
-count.oninput=()=>{count=+count.value;countVal.textContent=count}
+function startDemo() {
+  stopAll();
+  bar.style.width = "0%";
 
-/* HISTORY */
-function log(msg){
-  if(history.textContent.includes("No"))history.innerHTML="";
-  history.innerHTML+="• "+msg+"<br>";
-}
-
-/* NOTIFICATIONS */
-function toast(t,b){
-  const d=document.createElement("div");
-  d.className="toast";
-  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
-  toastArea.appendChild(d);
-  setTimeout(()=>d.remove(),3000);
-}
-
-function send(t,b){
-  if(isWindows)toast(t,b);
-  else try{new Notification(t,{body:b})}catch{}
-}
-
-/* ACTIONS */
-function requestPermission(){Notification.requestPermission()}
-
-function sendOne(){
-  send(titleInput.value||"Demo",msgInput.value||"Hello");
-  log(msgInput.value||"Hello");
-  incrementStat();
-}
-
-function startDemo(){
-  stopAll();bar.style.width="0%";
-  for(let i=1;i<=count;i++){
-    const to=setTimeout(()=>{
-      send("SECURITY ALERT",msgInput.value||"Alert");
-      bar.style.width=(i/count*100)+"%";
+  for (let i = 1; i <= count; i++) {
+    const id = setTimeout(() => {
+      sendNotification("SECURITY ALERT", msgInput.value || "Alert");
+      bar.style.width = (i / count) * 100 + "%";
       log("SECURITY ALERT");
-      incrementStat();
-    },i*speed);
-    timeouts.push(to);
+    }, i * speed);
+    timeouts.push(id);
   }
 }
 
-function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
-</script>
-
-</body>
-</html>
+function stopAll() {
+  while (timeouts.length) {
+    clearTimeout(timeouts.pop());
+  }
+}
