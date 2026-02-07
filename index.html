@@ -5,32 +5,24 @@
 <title>Notification Demo</title>
 
 <style>
-:root{--bg:#f4f6f8;--card:#fff;--text:#000;--panel:#eef2ff}
-body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--panel:#020617}
-body{margin:0;padding:20px;font-family:Arial;background:var(--bg);color:var(--text)}
-.main{max-width:520px;margin:auto;background:var(--card);padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
-button,input{width:100%;padding:10px;margin-top:10px;border-radius:6px;font-size:15px}
-button{border:none;cursor:pointer}
-.primary{background:#4f46e5;color:#fff}
-.normal{background:#10b981;color:#fff}
-.danger{background:#ef4444;color:#fff}
-.stop{background:#6b7280;color:#fff}
-.panelBtn{background:#0ea5e9;color:#fff}
-.notice{padding:8px;background:#fde68a;color:#92400e;border-radius:6px;font-size:13px;display:none}
-.progress{width:100%;height:14px;background:#374151;border-radius:7px;overflow:hidden;margin-top:10px}
-.bar{height:100%;width:0%;background:#ef4444}
-.footer{text-align:center;font-size:13px;opacity:.7;margin-top:20px}
+body{margin:0;padding:20px;font-family:Arial;background:#f4f6f8}
+.main{max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+button,input{width:100%;padding:10px;margin-top:10px;font-size:15px}
+.primary{background:#4f46e5;color:#fff;border:none}
+.normal{background:#10b981;color:#fff;border:none}
+.danger{background:#ef4444;color:#fff;border:none}
+.stop{background:#6b7280;color:#fff;border:none}
 
-.sidebar{position:fixed;top:0;width:320px;height:100%;background:var(--card);padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.25);transition:.3s;overflow-y:auto;z-index:1000}
-.left{left:0;transform:translateX(-100%)}
-.right{right:0;transform:translateX(100%)}
+.sidebar{
+  position:fixed;top:0;right:0;width:300px;height:100%;
+  background:#fff;padding:20px;
+  transform:translateX(100%);
+  transition:.3s;box-shadow:-5px 0 20px rgba(0,0,0,.2)
+}
 .sidebar.open{transform:translateX(0)}
 
-.section{margin-top:20px}
-.history{background:var(--panel);padding:10px;border-radius:6px;font-size:13px;max-height:160px;overflow-y:auto}
-
-#toastArea{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:3000}
-.toast{width:320px;background:#111827;color:#e5e7eb;border-radius:10px;padding:12px}
+.progress{height:10px;background:#ddd;margin-top:10px}
+.bar{height:100%;width:0;background:#ef4444}
 </style>
 </head>
 
@@ -39,100 +31,82 @@ button{border:none;cursor:pointer}
 <div class="main">
 <h2>🔔 Notification Experiment</h2>
 
-<div class="notice" id="windowsNotice">
-Only supported for Chromebook at this point.<br>
-Windows uses a visual preview.
-</div>
-
 <button class="primary" onclick="requestPermission()">Allow Notifications</button>
 <button class="normal" onclick="sendOne()">Send Notification</button>
-<button class="danger" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
-<button class="stop" onclick="stopAll()">🛑 Stop</button>
+<button class="danger" onclick="startDemo()">Fake “Hacked” Demo</button>
+<button class="stop" onclick="stopAll()">Stop</button>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
-<button class="panelBtn" onclick="toggleRight()">⚙️ Controls</button>
-
-<div class="footer">© Copyright FilipoPencil 2026</div>
+<button onclick="toggleControls()">⚙️ Controls</button>
 </div>
 
-<div class="sidebar right" id="rightBar">
-<button class="panelBtn" onclick="toggleRight()">❌ Close</button>
+<div class="sidebar" id="controls">
+<h3>Controls</h3>
 
-<div class="section">
-<input id="titleInput" placeholder="Title">
-<input id="msgInput" placeholder="Message">
-</div>
+Title
+<input id="titleInput" value="Demo">
 
-<div class="section">
-Speed <strong><span id="speedVal">200</span> ms</strong>
+Message
+<input id="msgInput" value="Hello">
+
+Speed: <span id="speedVal">200</span> ms
 <input type="range" min="100" max="2000" step="100" value="200" id="speed">
 
-Count <strong><span id="countVal">30</span></strong>
+Count: <span id="countVal">30</span>
 <input type="range" min="5" max="100" value="30" id="count">
 </div>
 
-<div class="section">
-<div class="history" id="history">No notifications yet.</div>
-</div>
-</div>
-
-<div id="toastArea"></div>
-
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
-const isWindows=/Win/i.test(navigator.userAgent);
-if(isWindows) windowsNotice.style.display="block";
-
 let speed=200, count=30;
-const timeouts=[];
+let timers=[];
 
-function toggleRight(){ rightBar.classList.toggle("open"); }
+const speedSlider=document.getElementById("speed");
+const countSlider=document.getElementById("count");
+const speedVal=document.getElementById("speedVal");
+const countVal=document.getElementById("countVal");
 
-speed.oninput=()=>{ speed=+speed.value; speedVal.textContent=speed; };
-count.oninput=()=>{ count=+count.value; countVal.textContent=count; };
-
-function log(msg){
-  if(history.textContent.includes("No")) history.innerHTML="";
-  history.innerHTML+="• "+msg+"<br>";
-}
-
-function toast(t,b){
-  const d=document.createElement("div");
-  d.className="toast";
-  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
-  toastArea.appendChild(d);
-  setTimeout(()=>d.remove(),3000);
-}
-
-function send(t,b){
-  if(isWindows) toast(t,b);
-  else if(Notification.permission==="granted") new Notification(t,{body:b});
-}
-
-window.requestPermission=()=>Notification.requestPermission();
-
-window.sendOne=()=>{
-  send(titleInput.value||"Demo",msgInput.value||"Hello");
-  log(msgInput.value||"Hello");
+speedSlider.oninput=()=>{
+  speed=speedSlider.value;
+  speedVal.textContent=speed;
+};
+countSlider.oninput=()=>{
+  count=countSlider.value;
+  countVal.textContent=count;
 };
 
-window.startDemo=()=>{
-  stopAll(); bar.style.width="0%";
-  for(let i=1;i<=count;i++){
-    const to=setTimeout(()=>{
-      send("SECURITY ALERT",msgInput.value||"Alert");
-      bar.style.width=(i/count*100)+"%";
-      log("SECURITY ALERT");
-    },i*speed);
-    timeouts.push(to);
+function toggleControls(){
+  document.getElementById("controls").classList.toggle("open");
+}
+
+function requestPermission(){
+  Notification.requestPermission();
+}
+
+function sendOne(){
+  if(Notification.permission==="granted"){
+    new Notification(titleInput.value,{body:msgInput.value});
   }
-};
+}
 
-window.stopAll=()=>{ while(timeouts.length) clearTimeout(timeouts.pop()); };
+function startDemo(){
+  stopAll();
+  bar.style.width="0%";
+  for(let i=1;i<=count;i++){
+    const t=setTimeout(()=>{
+      if(Notification.permission==="granted"){
+        new Notification("SECURITY ALERT",{body:msgInput.value});
+      }
+      bar.style.width=(i/count*100)+"%";
+    },i*speed);
+    timers.push(t);
+  }
+}
 
-});
+function stopAll(){
+  timers.forEach(clearTimeout);
+  timers=[];
+}
 </script>
 
 </body>
