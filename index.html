@@ -1,9 +1,40 @@
 <script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
 /* =========================
    ENV
 ========================= */
 const isWindows = /Win/i.test(navigator.userAgent);
-if (isWindows) windowsNotice.style.display = "block";
+const isGithub = location.hostname.includes("github.io");
+
+const windowsNotice = document.getElementById("windowsNotice");
+if (isWindows && windowsNotice) windowsNotice.style.display = "block";
+
+/* =========================
+   ELEMENTS
+========================= */
+const leftBar   = document.getElementById("leftBar");
+const rightBar  = document.getElementById("rightBar");
+const loginBox  = document.getElementById("loginBox");
+const userBox   = document.getElementById("userBox");
+const userLabel = document.getElementById("userLabel");
+const sentCount = document.getElementById("sentCount");
+const statFill  = document.getElementById("statFill");
+const historyEl = document.getElementById("history");
+const bar       = document.getElementById("bar");
+const toastArea = document.getElementById("toastArea");
+
+const titleInput = document.getElementById("titleInput");
+const msgInput   = document.getElementById("msgInput");
+
+const speedSlider = document.getElementById("speed");
+const countSlider = document.getElementById("count");
+const speedVal    = document.getElementById("speedVal");
+const countVal    = document.getElementById("countVal");
+
+const username = document.getElementById("username");
+const password = document.getElementById("password");
 
 /* =========================
    STATE
@@ -16,28 +47,24 @@ const timeouts = [];
 /* =========================
    SIDEBARS
 ========================= */
-function toggleLeft(){ leftBar.classList.toggle("open"); }
-function toggleRight(){ rightBar.classList.toggle("open"); }
-function toggleDark(){ document.body.classList.toggle("dark"); }
+window.toggleLeft  = () => leftBar?.classList.toggle("open");
+window.toggleRight = () => rightBar?.classList.toggle("open");
+window.toggleDark  = () => document.body.classList.toggle("dark");
 
 /* =========================
    USERS
 ========================= */
 function loadUsers(){
-  try {
-    return JSON.parse(localStorage.getItem("users")) || {};
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem("users")) || {}; }
+  catch { return {}; }
 }
 
 function saveUsers(users){
-  try {
-    localStorage.setItem("users", JSON.stringify(users));
-  } catch {}
+  try { localStorage.setItem("users", JSON.stringify(users)); }
+  catch {}
 }
 
-function login(){
+window.login = () => {
   const u = username.value.trim();
   const p = password.value;
   if (!u || !p) return alert("Enter both fields");
@@ -49,12 +76,12 @@ function login(){
   currentUser = u;
   saveUsers(users);
   updateUI();
-}
+};
 
-function logout(){
+window.logout = () => {
   currentUser = null;
   updateUI();
-}
+};
 
 function updateUI(){
   if (currentUser) {
@@ -87,23 +114,27 @@ function incrementStat(){
 /* =========================
    CONTROLS
 ========================= */
-speed.oninput = () => {
-  speed = +speed.value;
-  speedVal.textContent = speed;
-};
+if (speedSlider) {
+  speedSlider.oninput = () => {
+    speed = +speedSlider.value;
+    speedVal.textContent = speed;
+  };
+}
 
-count.oninput = () => {
-  count = +count.value;
-  countVal.textContent = count;
-};
+if (countSlider) {
+  countSlider.oninput = () => {
+    count = +countSlider.value;
+    countVal.textContent = count;
+  };
+}
 
 /* =========================
    HISTORY
 ========================= */
 function log(msg){
-  if (history.textContent.includes("No notifications"))
-    history.innerHTML = "";
-  history.innerHTML += "• " + msg + "<br>";
+  if (historyEl.textContent.includes("No notifications"))
+    historyEl.innerHTML = "";
+  historyEl.innerHTML += "• " + msg + "<br>";
 }
 
 /* =========================
@@ -117,11 +148,11 @@ function toast(title, body){
   setTimeout(() => d.remove(), 3000);
 }
 
-/* 🔑 SINGLE PIPELINE — STATS ALWAYS UPDATE */
+/* 🔑 SINGLE PIPELINE */
 function send(title, body){
   incrementStat();
 
-  if (isWindows || location.hostname.includes("github.io")) {
+  if (isWindows || isGithub) {
     toast(title, body);
   } else {
     try {
@@ -133,20 +164,20 @@ function send(title, body){
 }
 
 /* =========================
-   ACTIONS
+   ACTIONS (EXPOSED)
 ========================= */
-function requestPermission(){
+window.requestPermission = () => {
   if ("Notification" in window)
     Notification.requestPermission();
-}
+};
 
-function sendOne(){
+window.sendOne = () => {
   send(titleInput.value || "Demo",
        msgInput.value || "Hello");
   log(msgInput.value || "Hello");
-}
+};
 
-function startDemo(){
+window.startDemo = () => {
   stopAll();
   bar.style.width = "0%";
 
@@ -159,10 +190,14 @@ function startDemo(){
     }, i * speed);
     timeouts.push(t);
   }
-}
+};
 
-function stopAll(){
+window.stopAll = () => {
   while (timeouts.length)
     clearTimeout(timeouts.pop());
-}
+};
+
+});
+</script>
+
 </script>
