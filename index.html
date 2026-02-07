@@ -40,32 +40,32 @@ button{border:none;cursor:pointer}
 .progress{width:100%;height:14px;background:#374151;border-radius:7px;overflow:hidden;margin-top:10px}
 .bar{height:100%;width:0%;background:#ef4444}
 
-.footer{margin-top:20px;text-align:center;font-size:13px;opacity:.7}
+.footer{text-align:center;font-size:13px;opacity:.7;margin-top:20px}
 
-/* SIDE PANEL */
-.side{
-  position:fixed;top:0;right:-360px;width:360px;height:100%;
+/* SIDE BARS */
+.sidebar{
+  position:fixed;top:0;width:320px;height:100%;
   background:var(--card);padding:20px;
-  box-shadow:-10px 0 25px rgba(0,0,0,.25);
-  transition:right .3s ease;z-index:1000;overflow-y:auto;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+  transition:transform .3s ease;
+  z-index:1000;overflow-y:auto;
 }
-.side.open{right:0}
+.left{left:0;transform:translateX(-100%)}
+.right{right:0;transform:translateX(100%)}
+.sidebar.open{transform:translateX(0)}
 
 .section{margin-top:20px}
 .section h3{margin-bottom:8px}
 
 .history{
-  padding:10px;background:var(--panel);
-  border-radius:6px;font-size:13px;
-  max-height:160px;overflow-y:auto;
+  background:var(--panel);padding:10px;border-radius:6px;
+  font-size:13px;max-height:160px;overflow-y:auto;
 }
 
 .statbar{
   height:12px;background:#374151;border-radius:6px;overflow:hidden;margin-top:6px
 }
-.statfill{
-  height:100%;width:0%;background:#22c55e
-}
+.statfill{height:100%;width:0%;background:#22c55e}
 
 /* WINDOWS PREVIEW */
 #toastArea{
@@ -73,8 +73,8 @@ button{border:none;cursor:pointer}
   display:flex;flex-direction:column;gap:10px;pointer-events:none;
 }
 .toast{
-  width:320px;background:#111827;color:#e5e7eb;border-radius:10px;
-  padding:12px;box-shadow:0 10px 25px rgba(0,0,0,.35);
+  width:320px;background:#111827;color:#e5e7eb;
+  border-radius:10px;padding:12px;
 }
 </style>
 </head>
@@ -96,18 +96,16 @@ Windows uses a visual preview.
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
-<button class="panelBtn" onclick="togglePanel()">⚙️ Open Sidebar</button>
+<button class="panelBtn" onclick="toggleLeft()">👤 Account & Stats</button>
+<button class="panelBtn" onclick="toggleRight()">⚙️ Controls & Info</button>
 
 <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
-<!-- SIDEBAR -->
-<div class="side" id="panel">
+<!-- LEFT SIDEBAR: ACCOUNT -->
+<div class="sidebar left" id="leftBar">
+<button class="panelBtn" onclick="toggleLeft()">❌ Close</button>
 
-<button class="panelBtn" onclick="togglePanel()">❌ Close</button>
-<button class="panelBtn" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
-
-<!-- ACCOUNT -->
 <div class="section">
 <h3>👤 Account (Demo)</h3>
 
@@ -121,16 +119,19 @@ Windows uses a visual preview.
 <strong id="userLabel"></strong>
 <button class="panelBtn" onclick="logout()">Log out</button>
 
-<div style="margin-top:10px;font-size:14px">
+<div class="section">
 Notifications sent: <strong id="notifCount">0</strong>
-<div class="statbar">
-  <div class="statfill" id="statFill"></div>
+<div class="statbar"><div class="statfill" id="statFill"></div></div>
 </div>
 </div>
 </div>
 </div>
 
-<!-- CONTROLS -->
+<!-- RIGHT SIDEBAR: CONTROLS -->
+<div class="sidebar right" id="rightBar">
+<button class="panelBtn" onclick="toggleRight()">❌ Close</button>
+<button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+
 <div class="section">
 <h3>✏️ Notification Content</h3>
 <input id="titleInput" placeholder="Title">
@@ -146,121 +147,91 @@ Count: <span id="countLabel">30</span>
 </div>
 
 <div class="section">
-<h3>🕘 Fake Notification History</h3>
+<h3>🕘 Notification History</h3>
 <div class="history" id="history">No notifications yet.</div>
 </div>
 
+<div class="section">
+<button class="panelBtn" onclick="toggleExplain()">ℹ️ Explanation</button>
+<div id="explain" style="display:none;font-size:14px">
+Educational demo showing notification permissions,
+rate limiting, and browser protection.
+</div>
+</div>
 </div>
 
 <div id="toastArea"></div>
 
 <script>
-/* OS */
 const isWindows=/Win/i.test(navigator.userAgent);
 if(isWindows)windowsNotice.style.display="block";
 
-/* STATE */
 let speed=200,count=30;
-const timeouts=[];
 let currentUser=null;
-
-/* ELEMENTS */
-const history=document.getElementById("history");
+const timeouts=[];
 const bar=document.getElementById("bar");
 
-/* PANEL */
-function togglePanel(){panel.classList.toggle("open")}
+function toggleLeft(){leftBar.classList.toggle("open")}
+function toggleRight(){rightBar.classList.toggle("open")}
 function toggleDark(){document.body.classList.toggle("dark")}
+function toggleExplain(){explain.style.display=explain.style.display==="none"?"block":"none"}
 
-/* AUTH (DEMO) */
-function login(){
-  const u=userInput.value.trim();
-  const p=passInput.value;
-  if(!u||!p)return alert("Enter username and password");
-
-  const users=JSON.parse(localStorage.users||"{}");
-  if(!users[u]) users[u]={password:p, sent:0};
-  if(users[u].password!==p) return alert("Wrong password");
-
-  currentUser=u;
-  localStorage.users=JSON.stringify(users);
-  showAccount();
-}
-
-function logout(){
-  currentUser=null;
-  authBox.style.display="block";
-  accountBox.style.display="none";
-}
-
-function showAccount(){
-  authBox.style.display="none";
-  accountBox.style.display="block";
-  userLabel.textContent="Logged in as: "+currentUser;
-  updateStats();
-}
-
-function updateStats(){
-  const users=JSON.parse(localStorage.users||"{}");
-  const sent=users[currentUser]?.sent||0;
-  notifCount.textContent=sent;
-  statFill.style.width=Math.min(sent,100)+"%";
-}
-
-/* CONTROLS */
 speedSlider.oninput=()=>{speed=+speedSlider.value;speedLabel.textContent=speed}
 countSlider.oninput=()=>{count=+countSlider.value;countLabel.textContent=count}
 
-/* HISTORY */
+function login(){
+  const u=userInput.value.trim(),p=passInput.value;
+  if(!u||!p)return alert("Enter username and password");
+  const users=JSON.parse(localStorage.users||"{}");
+  if(!users[u])users[u]={p,s:0};
+  if(users[u].p!==p)return alert("Wrong password");
+  localStorage.users=JSON.stringify(users);
+  currentUser=u;showAccount();
+}
+function logout(){currentUser=null;authBox.style.display="block";accountBox.style.display="none"}
+function showAccount(){
+  authBox.style.display="none";accountBox.style.display="block";
+  userLabel.textContent="Logged in as "+currentUser;updateStats();
+}
+function updateStats(){
+  const u=JSON.parse(localStorage.users||"{}")[currentUser];
+  notifCount.textContent=u.s;
+  statFill.style.width=Math.min(u.s,100)+"%";
+}
+function countSend(){
+  if(!currentUser)return;
+  const users=JSON.parse(localStorage.users);
+  users[currentUser].s++;localStorage.users=JSON.stringify(users);
+  updateStats();
+}
 function addHistory(t){
   if(history.textContent.includes("No"))history.innerHTML="";
   history.innerHTML+="• "+t+"<br>";
 }
-
-/* NOTIFICATION */
 function toast(t,b){
   const d=document.createElement("div");
-  d.className="toast";
-  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
-  toastArea.appendChild(d);
-  setTimeout(()=>d.remove(),3500);
+  d.className="toast";d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);setTimeout(()=>d.remove(),3500);
 }
-
 function send(t,b){
-  if(isWindows) toast(t,b);
+  if(isWindows)toast(t,b);
   else try{new Notification(t,{body:b})}catch{}
 }
-
-/* ACTIONS */
 function requestPermission(){Notification.requestPermission()}
-
-function countSend(){
-  if(!currentUser) return;
-  const users=JSON.parse(localStorage.users||"{}");
-  users[currentUser].sent++;
-  localStorage.users=JSON.stringify(users);
-  updateStats();
-}
-
 function sendOne(){
   send(titleInput.value||"Demo",textInput.value||"Hello");
-  addHistory(textInput.value||"Hello");
-  countSend();
+  addHistory(textInput.value||"Hello");countSend();
 }
-
 function startDemo(){
   stopAll();bar.style.width="0%";
   for(let i=1;i<=count;i++){
     const t=setTimeout(()=>{
       send("SECURITY ALERT",textInput.value||"Alert");
       bar.style.width=(i/count*100)+"%";
-      addHistory("SECURITY ALERT");
-      countSend();
-    },i*speed);
-    timeouts.push(t);
+      addHistory("SECURITY ALERT");countSend();
+    },i*speed);timeouts.push(t);
   }
 }
-
 function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
 </script>
 
