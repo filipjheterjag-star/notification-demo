@@ -84,7 +84,6 @@ button,input{
   overflow-y:auto;
 }
 body.dark .panel{background:#020617}
-
 .panel.open{transform:translateX(0)}
 
 .history{
@@ -96,6 +95,23 @@ body.dark .panel{background:#020617}
   overflow-y:auto;
 }
 body.dark .history{background:#020617}
+
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:3000;
+}
+.popupBox{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  max-width:360px;
+}
+body.dark .popupBox{background:#1e293b}
 
 #toastArea{
   position:fixed;
@@ -121,11 +137,11 @@ body.dark .history{background:#020617}
   <h2>🔔 Notification Experiment</h2>
 
   <div class="notice" id="windowsNotice" style="display:none">
-    🪟 Windows detected. Using visual notification preview (simulation).
+    🪟 Windows detected. Using visual notification preview.
   </div>
 
-  <button class="blue">ℹ️ What is this demo?</button>
-  <button class="blue">❓ Why didn’t I get a notification?</button>
+  <button class="blue" onclick="openPopup('about')">ℹ️ What is this demo?</button>
+  <button class="blue" onclick="openPopup('help')">❓ Why didn’t I get a notification?</button>
   <button class="blue" onclick="togglePanel()">⚙️ Open Panel</button>
 
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
@@ -135,8 +151,6 @@ body.dark .history{background:#020617}
 
   <button class="green" onclick="sendOne()">Normal Notification</button>
 
-  <div style="margin-top:10px">Notifications to send: <strong>30</strong></div>
-
   <button class="red" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
   <button class="gray" onclick="stopAll()">🛑 Stop</button>
 
@@ -144,10 +158,7 @@ body.dark .history{background:#020617}
 
   <div class="status">
     Status: <strong id="status">Ready</strong><br>
-    Attempts: <span id="attempts">0</span> |
-    Sent: <span id="sent">0</span> |
-    Blocked: 0<br>
-    Browser protection: <span style="color:#16a34a">Allowed</span>
+    Sent: <span id="sent">0</span>
   </div>
 </div>
 
@@ -159,12 +170,14 @@ body.dark .history{background:#020617}
   <h3>📜 Notification History</h3>
   <div class="history" id="history">No notifications yet.</div>
   <button class="gray" onclick="clearHistory()">🧹 Clear History</button>
+</div>
 
-  <h3>ℹ️ Info</h3>
-  <p style="font-size:13px;opacity:.8">
-    This is a browser notification demo.<br>
-    Windows shows a simulated preview.
-  </p>
+<!-- POPUPS -->
+<div class="popup" id="popup">
+  <div class="popupBox">
+    <div id="popupText"></div>
+    <button class="gray" onclick="closePopup()">Close</button>
+  </div>
 </div>
 
 <div id="toastArea"></div>
@@ -173,19 +186,24 @@ body.dark .history{background:#020617}
 const isWindows=/Win/i.test(navigator.userAgent);
 if(isWindows) windowsNotice.style.display="block";
 
-let sent=0,attempts=0,timeouts=[];
+let sent=0;
+let timeouts=[];
 
-function togglePanel(){
-  panel.classList.toggle("open");
+function togglePanel(){ panel.classList.toggle("open"); }
+function toggleDark(){ document.body.classList.toggle("dark"); }
+
+function openPopup(type){
+  popup.style.display="flex";
+  popupText.innerHTML =
+    type==="about"
+    ? "<h3>What is this demo?</h3>This website demonstrates how browser notifications work. The hacked mode is only a simulation."
+    : "<h3>Why didn’t I get a notification?</h3>Possible reasons: permission denied, browser blocked notifications, or Windows preview mode.";
 }
+function closePopup(){ popup.style.display="none"; }
 
-function toggleDark(){
-  document.body.classList.toggle("dark");
-}
-
-function logHistory(msg){
+function logHistory(text){
   if(history.textContent.includes("No")) history.innerHTML="";
-  history.innerHTML+="• "+msg+"<br>";
+  history.innerHTML += "• "+text+"<br>";
 }
 
 function clearHistory(){
@@ -201,28 +219,20 @@ function toast(title,body){
 }
 
 function sendNotification(text){
-  attempts++; attemptsSpan.textContent=attempts;
   if(isWindows){
     toast("Notification",text);
-    sent++;
   }else if(Notification.permission==="granted"){
     new Notification("Notification",{body:text});
-    sent++;
   }
+  sent++;
   sentSpan.textContent=sent;
   logHistory(text);
 }
 
-const attemptsSpan=document.getElementById("attempts");
 const sentSpan=document.getElementById("sent");
 
-function requestPermission(){
-  Notification.requestPermission();
-}
-
-function sendOne(){
-  sendNotification(msgInput.value||"Hello");
-}
+function requestPermission(){ Notification.requestPermission(); }
+function sendOne(){ sendNotification(msgInput.value||"Hello"); }
 
 function startDemo(){
   stopAll();
