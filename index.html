@@ -5,193 +5,233 @@
 <title>Notification Demo</title>
 
 <style>
-:root{
-  --bg:#f1f5f9;
-  --card:#ffffff;
-  --text:#020617;
-  --danger:#ef4444;
-}
-
 body{
   margin:0;
-  padding:30px;
-  font-family:system-ui;
-  background:var(--bg);
-  color:var(--text);
+  font-family:Arial, sans-serif;
+  background:#f1f5f9;
 }
-
-.main{
-  max-width:520px;
-  margin:auto;
-  background:var(--card);
+.card{
+  max-width:420px;
+  margin:60px auto;
+  background:#fff;
   padding:24px;
-  border-radius:18px;
-  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
 }
-
+h2{margin-top:0}
 button,input{
   width:100%;
-  padding:14px;
-  margin-top:12px;
-  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  font-size:15px;
   border:none;
-  font-weight:600;
 }
-
-.blue{background:#3b82f6;color:#fff}
+.blue{background:#2563eb;color:#fff}
 .green{background:#10b981;color:#fff}
 .red{background:#ef4444;color:#fff}
-.gray{background:#64748b;color:#fff}
-
+.gray{background:#6b7280;color:#fff}
+.info{background:#0ea5e9;color:#fff}
+.notice{
+  background:#fde68a;
+  color:#92400e;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:10px;
+  display:none;
+}
 .progress{
-  width:100%;
-  height:16px;
+  height:12px;
   background:#e5e7eb;
-  border-radius:10px;
+  border-radius:6px;
   overflow:hidden;
-  margin-top:14px;
+  margin-top:12px;
 }
 .bar{
   height:100%;
   width:0%;
-  background:linear-gradient(90deg,#ef4444,#f97316);
+  background:#ef4444;
+}
+.status{
+  font-size:13px;
+  margin-top:10px;
+  opacity:.7;
 }
 
-#toastArea{
+/* PANEL */
+.panel{
   position:fixed;
   right:20px;
+  top:20px;
+  width:300px;
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
+  padding:20px;
+  display:none;
+  z-index:999;
+}
+.panel h3{margin-top:0}
+
+/* TOAST */
+#toastArea{
+  position:fixed;
   bottom:20px;
+  right:20px;
   display:flex;
   flex-direction:column;
-  gap:12px;
-  z-index:2000;
+  gap:10px;
 }
 .toast{
-  width:320px;
-  background:#020617;
-  color:#e5e7eb;
-  padding:14px;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.5);
+  background:#111827;
+  color:#fff;
+  padding:12px;
+  border-radius:10px;
+  width:300px;
 }
 
-/* LOCKDOWN SCREEN */
-#lockdown{
+/* LOCKOUT */
+#lockout{
   position:fixed;
   inset:0;
   background:#020617;
-  color:#ef4444;
+  color:#fff;
   display:none;
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  font-size:28px;
-  z-index:5000;
-}
-#lockdown span{
-  font-size:64px;
-  margin-top:20px;
+  font-size:22px;
+  z-index:2000;
 }
 </style>
 </head>
 
 <body>
 
-<div class="main">
-<h2>🔔 Notification Demo</h2>
+<div class="card">
+  <h2>🔔 Notification Demo</h2>
 
-<input id="msgInput" value="Test notification">
+  <div class="notice" id="windowsNotice">
+    Windows detected. Using visual notification preview.
+  </div>
 
-<button class="green" onclick="sendOne()">Send Notification</button>
-<button class="red" onclick="startDemo()">⚠️ Fake Hacked Demo</button>
-<button class="gray" onclick="stopAll()">🛑 Stop</button>
+  <button class="info" onclick="showInfo()">ℹ️ What is this demo?</button>
+  <button class="info" onclick="showWhy()">❓ Why didn’t I get a notification?</button>
+  <button class="info" onclick="togglePanel()">⚙️ Open Panel</button>
 
-<div class="progress"><div class="bar" id="bar"></div></div>
+  <button class="blue" onclick="requestPermission()">Allow Notifications</button>
+
+  <input id="msgInput" placeholder="Test notification">
+  <button class="green" onclick="sendOne()">Send Notification</button>
+
+  <button class="red" onclick="startHack()">⚠️ Fake Hacked Demo</button>
+  <button class="gray" onclick="stopAll()">🛑 Stop</button>
+
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="status" id="status">Ready</div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <button class="gray" onclick="togglePanel()">✖ Close</button>
+  <button class="info" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
+  <p style="margin-top:10px;font-size:13px;opacity:.7">
+    Demo controls & settings will live here.
+  </p>
+</div>
+
+<!-- LOCKOUT -->
+<div id="lockout">
+  <div>🔒 SYSTEM LOCKED</div>
+  <div id="countdown">10</div>
 </div>
 
 <div id="toastArea"></div>
 
-<div id="lockdown">
-⚠️ SYSTEM LOCKDOWN INITIATED
-<span id="countdown">10</span>
-</div>
-
 <script>
-let timeouts=[];
+/* OS */
+const isWindows = /Win/i.test(navigator.userAgent);
+if(isWindows) windowsNotice.style.display="block";
 
-/* FAKE DATA */
-const locations=[
-  "Berlin, Germany","Moscow, Russia","New York, USA",
-  "Tokyo, Japan","Beijing, China","London, UK",
-  "Tehran, Iran","Seoul, South Korea"
-];
-
-const stages=[
-  "Unusual login detected",
-  "Multiple failed login attempts",
-  "Suspicious background activity",
-  "Firewall bypass attempt",
-  "Remote access detected",
-  "Privilege escalation detected",
-  "System integrity compromised",
-  "ADMIN ACCESS GRANTED TO UNKNOWN USER"
-];
-
-function randIP(){
-  return Array.from({length:4},()=>Math.floor(Math.random()*255)).join(".");
+/* PANEL */
+function togglePanel(){
+  panel.style.display = panel.style.display==="block"?"none":"block";
 }
-function randLoc(){
-  return locations[Math.floor(Math.random()*locations.length)];
+function toggleDark(){
+  document.body.style.background =
+    document.body.style.background === "rgb(15, 23, 42)" ? "#f1f5f9" : "#0f172a";
 }
 
-function toast(title, body){
-  const t=document.createElement("div");
-  t.className="toast";
-  t.innerHTML=`<strong>${title}</strong><div>${body}</div>`;
-  toastArea.appendChild(t);
-  setTimeout(()=>t.remove(),3500);
+/* INFO */
+function showInfo(){
+  alert("This demo shows how browser notifications can be abused for social engineering. No real harm is done.");
+}
+function showWhy(){
+  alert("Notifications may be blocked by your browser, OS, or you're on Windows where previews are simulated.");
 }
 
+/* NOTIFICATIONS */
+function toast(t,b){
+  const d=document.createElement("div");
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+function send(t,b){
+  if(isWindows) toast(t,b);
+  else if(Notification.permission==="granted")
+    new Notification(t,{body:b});
+}
+
+/* ACTIONS */
+function requestPermission(){
+  Notification.requestPermission();
+}
 function sendOne(){
-  toast("Notification",msgInput.value);
+  send("Demo",msgInput.value||"Hello");
 }
 
-function startDemo(){
+/* FAKE HACK DEMO */
+let timers=[];
+const ips=["185.23.11.42","91.204.16.8","45.133.192.77"];
+const locs=["Moscow","Beijing","Berlin","Unknown"];
+const msgs=[
+  "New login detected",
+  "Suspicious activity found",
+  "Accessing private files",
+  "Encrypting data",
+  "System takeover complete"
+];
+
+function startHack(){
   stopAll();
-  bar.style.width="0%";
-
-  for(let i=0;i<stages.length;i++){
-    const id=setTimeout(()=>{
-      const msg=`${stages[i]}<br>IP: ${randIP()}<br>Location: ${randLoc()}`;
-      toast("⚠️ SECURITY ALERT",msg);
-      bar.style.width=((i+1)/stages.length*100)+"%";
-
-      if(i===stages.length-1){
-        setTimeout(startLockdown,1000);
-      }
-    },i*800);
-    timeouts.push(id);
-  }
+  status.textContent="Attack in progress...";
+  msgs.forEach((m,i)=>{
+    timers.push(setTimeout(()=>{
+      send("SECURITY ALERT",`${m}\nIP: ${ips[i%3]} (${locs[i%4]})`);
+      bar.style.width=((i+1)/msgs.length*100)+"%";
+      if(i===msgs.length-1) lockout();
+    },i*1200));
+  });
 }
 
-function startLockdown(){
-  let c=10;
-  lockdown.style.display="flex";
-  countdown.textContent=c;
-
-  const cd=setInterval(()=>{
-    c--;
-    countdown.textContent=c;
-    if(c<=0){
-      clearInterval(cd);
-      lockdown.innerHTML="🔒 SYSTEM LOCKED";
-    }
+function lockout(){
+  let n=10;
+  lockout.style.display="flex";
+  const iv=setInterval(()=>{
+    countdown.textContent=n--;
+    if(n<0){clearInterval(iv);}
   },1000);
 }
 
 function stopAll(){
-  while(timeouts.length) clearTimeout(timeouts.pop());
-  lockdown.style.display="none";
+  timers.forEach(t=>clearTimeout(t));
+  timers=[];
+  bar.style.width="0%";
+  status.textContent="Stopped";
+  lockout.style.display="none";
 }
 </script>
 
