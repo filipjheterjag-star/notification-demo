@@ -8,17 +8,14 @@
 :root{
   --bg:#f1f5f9;
   --card:#ffffff;
-  --primary:#3b82f6;
+  --text:#020617;
   --danger:#ef4444;
-  --success:#10b981;
-  --gray:#64748b;
-  --text:#0f172a;
 }
 
 body{
   margin:0;
   padding:30px;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont;
+  font-family:system-ui;
   background:var(--bg);
   color:var(--text);
 }
@@ -29,12 +26,7 @@ body{
   background:var(--card);
   padding:24px;
   border-radius:18px;
-  box-shadow:0 20px 40px rgba(0,0,0,.15);
-}
-
-h2{
-  margin-top:0;
-  text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
 }
 
 button,input{
@@ -42,28 +34,14 @@ button,input{
   padding:14px;
   margin-top:12px;
   border-radius:12px;
-  font-size:15px;
   border:none;
-}
-
-button{
-  cursor:pointer;
   font-weight:600;
 }
 
-.blue{background:var(--primary);color:#fff}
-.green{background:var(--success);color:#fff}
-.red{background:var(--danger);color:#fff}
-.gray{background:var(--gray);color:#fff}
-
-.notice{
-  background:#e0f2fe;
-  color:#075985;
-  padding:12px;
-  border-radius:12px;
-  margin-top:12px;
-  font-size:14px;
-}
+.blue{background:#3b82f6;color:#fff}
+.green{background:#10b981;color:#fff}
+.red{background:#ef4444;color:#fff}
+.gray{background:#64748b;color:#fff}
 
 .progress{
   width:100%;
@@ -79,46 +57,6 @@ button{
   background:linear-gradient(90deg,#ef4444,#f97316);
 }
 
-.status{
-  margin-top:14px;
-  font-size:14px;
-  background:#f8fafc;
-  padding:12px;
-  border-radius:12px;
-}
-
-.hidden{display:none}
-
-/* PANEL */
-.panel{
-  position:fixed;
-  top:0;
-  right:0;
-  width:340px;
-  height:100%;
-  background:#ffffff;
-  padding:18px;
-  box-shadow:-10px 0 30px rgba(0,0,0,.25);
-  transform:translateX(100%);
-  transition:.3s ease;
-  z-index:1000;
-}
-.panel.open{transform:translateX(0)}
-
-.panel h3{
-  margin-top:16px;
-  margin-bottom:8px;
-}
-
-.history{
-  background:#f1f5f9;
-  padding:12px;
-  border-radius:12px;
-  font-size:14px;
-  color:#475569;
-}
-
-/* TOASTS */
 #toastArea{
   position:fixed;
   right:20px;
@@ -126,14 +64,33 @@ button{
   display:flex;
   flex-direction:column;
   gap:12px;
+  z-index:2000;
 }
 .toast{
-  width:300px;
-  background:#0f172a;
+  width:320px;
+  background:#020617;
   color:#e5e7eb;
-  border-radius:14px;
   padding:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.4);
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.5);
+}
+
+/* LOCKDOWN SCREEN */
+#lockdown{
+  position:fixed;
+  inset:0;
+  background:#020617;
+  color:#ef4444;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  font-size:28px;
+  z-index:5000;
+}
+#lockdown span{
+  font-size:64px;
+  margin-top:20px;
 }
 </style>
 </head>
@@ -143,69 +100,48 @@ button{
 <div class="main">
 <h2>🔔 Notification Demo</h2>
 
-<button class="blue" onclick="toggleInfo('what')">ℹ️ What is this demo?</button>
-<button class="blue" onclick="toggleInfo('why')">❓ Why didn’t I get a notification?</button>
-<button class="gray" onclick="togglePanel()">⚙️ Open Panel</button>
-
-<div id="what" class="notice hidden">
-A simple visual demo showing how notifications might behave in a browser environment.
-</div>
-
-<div id="why" class="notice hidden">
-Notifications can be blocked by browser settings, OS rules, or focus restrictions.
-</div>
-
-<input id="msgInput" value="Hello from the demo">
+<input id="msgInput" value="Test notification">
 
 <button class="green" onclick="sendOne()">Send Notification</button>
-<button class="red" onclick="startDemo()">⚠️ Fake Security Demo</button>
+<button class="red" onclick="startDemo()">⚠️ Fake Hacked Demo</button>
 <button class="gray" onclick="stopAll()">🛑 Stop</button>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
-
-<div class="status">
-Status: <strong id="status">Ready</strong><br>
-Attempts: <span id="attempts">0</span> |
-Sent: <span id="sent">0</span>
-</div>
-</div>
-
-<!-- PANEL -->
-<div class="panel" id="panel">
-<button class="gray" onclick="togglePanel()">❌ Close</button>
-<button class="blue" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
-
-<h3>📜 Notification History</h3>
-<div class="history">No notifications yet.</div>
 </div>
 
 <div id="toastArea"></div>
 
-<script>
-let attempts=0,sent=0;
-let timeouts=[];
-let dark=false;
+<div id="lockdown">
+⚠️ SYSTEM LOCKDOWN INITIATED
+<span id="countdown">10</span>
+</div>
 
-const hackMessages=[
-  "New login detected from unknown device",
-  "Firewall breach attempt blocked",
-  "Suspicious background process detected",
-  "Password change required immediately",
-  "Multiple failed login attempts",
-  "Remote access request detected",
-  "System integrity warning",
-  "Unusual network activity detected"
+<script>
+let timeouts=[];
+
+/* FAKE DATA */
+const locations=[
+  "Berlin, Germany","Moscow, Russia","New York, USA",
+  "Tokyo, Japan","Beijing, China","London, UK",
+  "Tehran, Iran","Seoul, South Korea"
 ];
 
-function toggleInfo(id){
-  document.getElementById(id).classList.toggle("hidden");
+const stages=[
+  "Unusual login detected",
+  "Multiple failed login attempts",
+  "Suspicious background activity",
+  "Firewall bypass attempt",
+  "Remote access detected",
+  "Privilege escalation detected",
+  "System integrity compromised",
+  "ADMIN ACCESS GRANTED TO UNKNOWN USER"
+];
+
+function randIP(){
+  return Array.from({length:4},()=>Math.floor(Math.random()*255)).join(".");
 }
-function togglePanel(){
-  panel.classList.toggle("open");
-}
-function toggleDark(){
-  dark=!dark;
-  document.body.style.background = dark ? "#020617" : "#f1f5f9";
+function randLoc(){
+  return locations[Math.floor(Math.random()*locations.length)];
 }
 
 function toast(title, body){
@@ -213,39 +149,50 @@ function toast(title, body){
   t.className="toast";
   t.innerHTML=`<strong>${title}</strong><div>${body}</div>`;
   toastArea.appendChild(t);
-  setTimeout(()=>t.remove(),3000);
+  setTimeout(()=>t.remove(),3500);
 }
 
 function sendOne(){
-  attempts++; sent++;
-  attemptsSpan.textContent=attempts;
-  sentSpan.textContent=sent;
-  toast("Notification", msgInput.value);
+  toast("Notification",msgInput.value);
 }
 
 function startDemo(){
   stopAll();
-  status.textContent="Running";
   bar.style.width="0%";
 
-  for(let i=0;i<30;i++){
+  for(let i=0;i<stages.length;i++){
     const id=setTimeout(()=>{
-      const msg=hackMessages[i % hackMessages.length];
-      toast("⚠️ SECURITY ALERT", msg);
-      bar.style.width=((i+1)/30*100)+"%";
-      if(i===29) status.textContent="Completed";
-    },i*200);
+      const msg=`${stages[i]}<br>IP: ${randIP()}<br>Location: ${randLoc()}`;
+      toast("⚠️ SECURITY ALERT",msg);
+      bar.style.width=((i+1)/stages.length*100)+"%";
+
+      if(i===stages.length-1){
+        setTimeout(startLockdown,1000);
+      }
+    },i*800);
     timeouts.push(id);
   }
 }
 
-function stopAll(){
-  while(timeouts.length) clearTimeout(timeouts.pop());
-  status.textContent="Stopped";
+function startLockdown(){
+  let c=10;
+  lockdown.style.display="flex";
+  countdown.textContent=c;
+
+  const cd=setInterval(()=>{
+    c--;
+    countdown.textContent=c;
+    if(c<=0){
+      clearInterval(cd);
+      lockdown.innerHTML="🔒 SYSTEM LOCKED";
+    }
+  },1000);
 }
 
-const attemptsSpan=document.getElementById("attempts");
-const sentSpan=document.getElementById("sent");
+function stopAll(){
+  while(timeouts.length) clearTimeout(timeouts.pop());
+  lockdown.style.display="none";
+}
 </script>
 
 </body>
