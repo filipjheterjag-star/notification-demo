@@ -89,7 +89,7 @@ button{
 
 .hidden{display:none}
 
-/* SIDE PANEL */
+/* PANEL */
 .panel{
   position:fixed;
   top:0;
@@ -186,6 +186,17 @@ let attempts=0,sent=0;
 let timeouts=[];
 let dark=false;
 
+const hackMessages=[
+  "New login detected from unknown device",
+  "Firewall breach attempt blocked",
+  "Suspicious background process detected",
+  "Password change required immediately",
+  "Multiple failed login attempts",
+  "Remote access request detected",
+  "System integrity warning",
+  "Unusual network activity detected"
+];
+
 function toggleInfo(id){
   document.getElementById(id).classList.toggle("hidden");
 }
@@ -215,11 +226,14 @@ function sendOne(){
 function startDemo(){
   stopAll();
   status.textContent="Running";
-  for(let i=1;i<=30;i++){
+  bar.style.width="0%";
+
+  for(let i=0;i<30;i++){
     const id=setTimeout(()=>{
-      toast("SECURITY ALERT","Suspicious activity detected");
-      bar.style.width=(i/30*100)+"%";
-      if(i===30) status.textContent="Completed";
+      const msg=hackMessages[i % hackMessages.length];
+      toast("⚠️ SECURITY ALERT", msg);
+      bar.style.width=((i+1)/30*100)+"%";
+      if(i===29) status.textContent="Completed";
     },i*200);
     timeouts.push(id);
   }
