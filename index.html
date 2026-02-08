@@ -6,88 +6,136 @@
 
 <style>
 :root{
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#111;
+  --accent:#4f46e5;
+  --danger:#ef4444;
+}
+body.dark{
   --bg:#0f172a;
-  --card:#020617;
+  --card:#1e293b;
   --text:#e5e7eb;
-  --accent:#ef4444;
-  --panel:#020617;
 }
 body{
   margin:0;
-  font-family:monospace;
+  padding:20px;
+  font-family:system-ui,Segoe UI,Arial;
   background:var(--bg);
   color:var(--text);
 }
 .main{
-  max-width:560px;
-  margin:40px auto;
+  max-width:520px;
+  margin:auto;
   background:var(--card);
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 0 40px rgba(239,68,68,.2);
+  padding:24px;
+  border-radius:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.2);
+  position:relative;
 }
 button{
   width:100%;
   padding:12px;
   margin-top:10px;
   border:none;
-  border-radius:8px;
-  background:#111827;
-  color:#fff;
+  border-radius:10px;
   font-size:15px;
+  font-weight:600;
   cursor:pointer;
 }
-button:hover{background:#1f2933}
-.danger{background:#7f1d1d}
-.danger:hover{background:#991b1b}
+.primary{background:var(--accent);color:#fff}
+.normal{background:#10b981;color:#fff}
+.danger{
+  background:var(--danger);
+  color:#fff;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+}
+.stop{background:#6b7280;color:#fff}
+.panelBtn{background:#0ea5e9;color:#fff}
+
+.notice{
+  background:#fde68a;
+  color:#92400e;
+  padding:8px;
+  border-radius:8px;
+  font-size:13px;
+  display:none;
+}
 
 .progress{
-  width:100%;
-  height:10px;
-  background:#111827;
-  border-radius:6px;
+  margin-top:16px;
+  height:14px;
+  background:#374151;
+  border-radius:8px;
   overflow:hidden;
-  margin-top:12px;
 }
 .bar{
   height:100%;
   width:0%;
-  background:var(--accent);
-  transition:width .2s;
+  background:#ef4444;
 }
 
-.sidebar{
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+  margin-top:22px;
+}
+
+/* PANEL */
+.panel{
   position:fixed;
   top:0;
   right:0;
   width:340px;
   height:100%;
-  background:#020617;
-  padding:16px;
+  background:var(--card);
+  padding:20px;
+  box-shadow:-12px 0 35px rgba(0,0,0,.3);
   transform:translateX(100%);
-  transition:.3s;
-  box-shadow:-10px 0 40px rgba(0,0,0,.6);
-}
-.sidebar.open{transform:translateX(0)}
-
-.terminal{
-  background:#000;
-  padding:12px;
-  border-radius:10px;
-  font-size:13px;
-  height:260px;
+  transition:.35s cubic-bezier(.4,0,.2,1);
+  z-index:1000;
   overflow-y:auto;
-  border:1px solid #1f2937;
 }
-.line{color:#22c55e}
-.warn{color:#facc15}
-.err{color:#ef4444}
+.panel.open{transform:translateX(0)}
 
-.footer{
-  text-align:center;
+.history{
+  background:rgba(0,0,0,.05);
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  min-height:80px;
+}
+
+/* TERMINAL */
+.terminal{
+  background:#020617;
+  color:#22c55e;
+  font-family:monospace;
   font-size:12px;
-  opacity:.5;
-  margin-top:16px;
+  padding:10px;
+  border-radius:8px;
+  min-height:160px;
+  max-height:240px;
+  overflow-y:auto;
+}
+
+/* TOAST */
+#toastArea{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.toast{
+  background:#111827;
+  color:#e5e7eb;
+  padding:12px;
+  border-radius:12px;
+  width:300px;
 }
 </style>
 </head>
@@ -97,96 +145,118 @@ button:hover{background:#1f2933}
 <div class="main">
   <h2>🔔 Notification Experiment</h2>
 
-  <button onclick="requestPermission()">Allow Notifications</button>
-  <button onclick="sendOne()">Send Test Notification</button>
-  <button class="danger" onclick="startDemo()">⚠ Fake Hacked Demo</button>
-  <button onclick="togglePanel()">📜 Open Control Panel</button>
+  <div class="notice" id="windowsNotice">
+    Windows detected — using visual preview.
+  </div>
+
+  <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+  <button class="normal" onclick="sendOne()">Send Notification</button>
+  <button class="danger" onclick="startHack()">Fake “Hacked” Demo</button>
+  <button class="stop" onclick="stopAll()">Stop</button>
 
   <div class="progress"><div class="bar" id="bar"></div></div>
 
-  <div class="footer">© FilipoPencil 2026</div>
+  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Control Panel</button>
+
+  <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
-<div class="sidebar" id="panel">
-  <button onclick="togglePanel()">❌ Close</button>
+<div class="panel" id="panel">
+  <button class="panelBtn" onclick="togglePanel()">Close</button>
 
-  <h3>Terminal Logs</h3>
-  <div class="terminal" id="terminal">
-    <div class="line">System idle.</div>
-  </div>
+  <h3>📜 Notification History</h3>
+  <div class="history" id="history">No notifications yet.</div>
+
+  <h3>🖥️ Terminal Logs</h3>
+  <div class="terminal" id="terminal"></div>
 </div>
+
+<div id="toastArea"></div>
 
 <script>
-const terminal = document.getElementById("terminal");
-const bar = document.getElementById("bar");
-const panel = document.getElementById("panel");
+const isWindows=/Win/i.test(navigator.userAgent);
+if(isWindows) windowsNotice.style.display="block";
 
-let demoRunning = false;
-let steps = [
-  "Initiating breach sequence…",
-  "Unauthorized access detected",
-  "IP 185.73.44.21 connected",
-  "Location resolved: Moscow, RU",
-  "Extracting browser credentials",
-  "Injecting remote payload",
-  "Firewall bypassed",
-  "System lock in progress",
-  "LOCKDOWN IN 5…",
-  "LOCKDOWN IN 4…",
-  "LOCKDOWN IN 3…",
-  "LOCKDOWN IN 2…",
-  "LOCKDOWN IN 1…",
-  "SYSTEM LOCKED"
-];
+let timeouts=[];
 
-function togglePanel(){
-  panel.classList.toggle("open");
+/* UI */
+function togglePanel(){panel.classList.toggle("open")}
+
+/* HISTORY */
+function log(msg){
+  if(history.textContent.includes("No notifications"))
+    history.innerHTML="";
+  history.innerHTML+="• "+msg+"<br>";
 }
 
-function log(text, cls="line"){
-  const div = document.createElement("div");
-  div.className = cls;
-  div.textContent = "> " + text;
-  terminal.appendChild(div);
+/* TERMINAL — FIXED */
+function term(msg){
+  terminal.innerHTML += "root@system:~$ " + msg + "<br>";
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function requestPermission(){
-  if("Notification" in window){
-    Notification.requestPermission();
-  }
+/* NOTIFS */
+function toast(t,b){
+  const d=document.createElement("div");
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+function send(t,b){
+  if(isWindows) toast(t,b);
+  else if(Notification.permission==="granted")
+    new Notification(t,{body:b});
 }
 
-function sendNotification(title, body){
-  if(Notification.permission === "granted"){
-    new Notification(title,{body});
-  }
-}
-
+/* ACTIONS */
+function requestPermission(){Notification.requestPermission()}
 function sendOne(){
-  sendNotification("Demo","This is a test notification");
-  log("Test notification sent");
+  send("Demo Notification","Hello from the demo");
+  log("Demo notification sent");
+  term("notify --demo");
 }
 
-function startDemo(){
-  if(demoRunning) return;
-  demoRunning = true;
-  terminal.innerHTML = "";
-  bar.style.width = "0%";
+/* FAKE HACK */
+const alerts=[
+  "Unauthorized login detected",
+  "IP 185.44.21.93 • Stockholm",
+  "Firewall rules modified",
+  "Privilege escalation successful",
+  "Dumping credentials",
+  "Encrypting user files",
+  "System lock imminent"
+];
+const cmds=[
+  "nmap -sS 192.168.1.0/24",
+  "ssh root@192.168.1.1",
+  "cat /etc/shadow",
+  "chmod 777 /system",
+  "rm -rf /logs",
+  "encrypt --all"
+];
 
-  steps.forEach((text, i) => {
-    setTimeout(() => {
-      let cls = "line";
-      if(text.includes("LOCK") || text.includes("breach")) cls="warn";
-      if(text.includes("LOCKED")) cls="err";
+function startHack(){
+  stopAll();
+  bar.style.width="0%";
+  term("initiating breach...");
 
-      log(text, cls);
-      sendNotification("SECURITY ALERT", text);
-      bar.style.width = ((i+1)/steps.length*100)+"%";
-    }, i * 500);
-  });
+  for(let i=1;i<=30;i++){
+    const id=setTimeout(()=>{
+      const a=alerts[i%alerts.length];
+      const c=cmds[i%cmds.length];
+      send("SECURITY ALERT",a);
+      log("SECURITY ALERT: "+a);
+      term(c);
+      bar.style.width=(i/30*100)+"%";
+    },i*90);
+    timeouts.push(id);
+  }
+}
 
-  setTimeout(()=>demoRunning=false, steps.length*500+500);
+function stopAll(){
+  while(timeouts.length) clearTimeout(timeouts.pop());
+  term("process interrupted");
 }
 </script>
 
