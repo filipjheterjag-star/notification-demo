@@ -1,39 +1,171 @@
-/* ================= OS DETECTION ================= */
-const isWindows = /Win/i.test(navigator.userAgent);
-if (isWindows && window.windowsNotice) {
-  windowsNotice.style.display = "block";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notification Demo</title>
+
+<style>
+:root {
+  --bg:#f4f6f8;
+  --card:#fff;
+  --text:#000;
+}
+body.dark {
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:#e5e7eb;
+}
+body {
+  margin:0;
+  padding:20px;
+  font-family:Arial;
+  background:var(--bg);
+  color:var(--text);
+}
+.main {
+  max-width:520px;
+  margin:auto;
+  background:var(--card);
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+button,input {
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  font-size:15px;
+}
+button {
+  border:none;
+  cursor:pointer;
+}
+.primary {background:#4f46e5;color:#fff}
+.normal {background:#10b981;color:#fff}
+.danger {background:#ef4444;color:#fff}
+.panelBtn {background:#0ea5e9;color:#fff}
+
+.progress {
+  width:100%;
+  height:14px;
+  background:#374151;
+  border-radius:7px;
+  overflow:hidden;
+  margin-top:12px;
+}
+.bar {
+  height:100%;
+  width:0%;
+  background:#ef4444;
 }
 
-/* ================= PANEL ================= */
+.sidebar {
+  position:fixed;
+  top:0;
+  right:0;
+  width:320px;
+  height:100%;
+  background:var(--card);
+  padding:20px;
+  box-shadow:-10px 0 25px rgba(0,0,0,.25);
+  transform:translateX(100%);
+  transition:.3s;
+  z-index:1000;
+}
+.sidebar.open {
+  transform:translateX(0);
+}
+
+.history {
+  background:#e5e7eb;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  margin-top:10px;
+  max-height:200px;
+  overflow:auto;
+}
+
+#toastArea {
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:2000;
+}
+.toast {
+  background:#111827;
+  color:#fff;
+  padding:12px;
+  border-radius:10px;
+  width:300px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="main">
+  <h2>🔔 Notification Experiment</h2>
+
+  <button class="primary" onclick="requestPermission()">Allow Notifications</button>
+  <button class="normal" onclick="sendOne()">Send Notification</button>
+  <button class="danger" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
+
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Panel</button>
+</div>
+
+<div class="sidebar" id="panel">
+  <button class="panelBtn" onclick="togglePanel()">❌ Close</button>
+  <button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+
+  <h3>📜 Notification History</h3>
+  <div class="history" id="history">No notifications yet.</div>
+
+  <h3>❓ Help</h3>
+  <p><strong>Why didn’t I get a notification?</strong><br>
+  Browsers block notifications unless permission is allowed.</p>
+
+  <p><strong>What is this demo?</strong><br>
+  A visual demo showing how fake notifications can look.</p>
+</div>
+
+<div id="toastArea"></div>
+
+<script>
+const panel = document.getElementById("panel");
+const historyBox = document.getElementById("history");
+const bar = document.getElementById("bar");
+const isWindows = /Win/i.test(navigator.userAgent);
+const timeouts = [];
+
 function togglePanel() {
-  panel.style.display = panel.style.display === "block" ? "none" : "block";
+  panel.classList.toggle("open");
 }
 function toggleDark() {
   document.body.classList.toggle("dark");
 }
 
-/* ================= INFO POPUPS ================= */
-function showInfo() {
-  alert(
-    "This is a SCHOOL DEMO showing how browser notifications can be abused.\n\nNo real hacking happens."
-  );
-}
-function showWhy() {
-  alert(
-    "Reasons you may not get notifications:\n\n• Permission not allowed\n• Browser blocked them\n• Windows uses visual previews only\n• GitHub Pages restrictions"
-  );
+function log(msg) {
+  if (historyBox.textContent.includes("No notifications")) {
+    historyBox.innerHTML = "";
+  }
+  historyBox.innerHTML += "• " + msg + "<br>";
 }
 
-/* ================= TOAST (WINDOWS PREVIEW) ================= */
 function toast(title, body) {
   const t = document.createElement("div");
   t.className = "toast";
   t.innerHTML = `<strong>${title}</strong><div>${body}</div>`;
-  toastArea.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  document.getElementById("toastArea").appendChild(t);
+  setTimeout(() => t.remove(), 3500);
 }
 
-/* ================= SEND NOTIFICATION ================= */
 function send(title, body) {
   if (isWindows) {
     toast(title, body);
@@ -42,90 +174,42 @@ function send(title, body) {
   }
 }
 
-/* ================= BASIC ACTIONS ================= */
 function requestPermission() {
   Notification.requestPermission();
 }
 
 function sendOne() {
-  send("Notification Demo", msgInput.value || "Test notification");
+  send("Demo Notification", "This is a test notification.");
+  log("Demo Notification");
 }
-
-/* ================= FAKE HACK DEMO ================= */
-let timers = [];
-
-const messages = [
-  "New login detected",
-  "Suspicious activity found",
-  "Multiple failed password attempts",
-  "Accessing private files",
-  "Encrypting user data",
-  "System takeover in progress"
-];
-
-const ips = [
-  "185.23.11.42",
-  "91.204.16.8",
-  "45.133.192.77",
-  "203.0.113.5"
-];
-
-const locations = [
-  "Moscow, RU",
-  "Beijing, CN",
-  "Berlin, DE",
-  "Unknown location"
-];
 
 function startDemo() {
   stopAll();
-  status.textContent = "Attack in progress...";
   bar.style.width = "0%";
 
+  const messages = [
+    "New login detected",
+    "IP: 185.73.44.21 (Germany)",
+    "Password changed",
+    "Admin access granted",
+    "Device locked in 10 seconds",
+    "System compromised"
+  ];
+
   messages.forEach((msg, i) => {
-    const t = setTimeout(() => {
-      const ip = ips[i % ips.length];
-      const loc = locations[i % locations.length];
-
-      send(
-        "SECURITY ALERT",
-        `${msg}\nIP: ${ip}\nLocation: ${loc}`
-      );
-
-      bar.style.width = ((i + 1) / messages.length) * 100 + "%";
-
-      if (i === messages.length - 1) {
-        showLockout();
-      }
-    }, i * 1200);
-
-    timers.push(t);
+    const id = setTimeout(() => {
+      send("SECURITY ALERT", msg);
+      log(msg);
+      bar.style.width = ((i + 1) / messages.length * 100) + "%";
+    }, i * 900);
+    timeouts.push(id);
   });
 }
 
-/* ================= LOCKOUT SCREEN ================= */
-function showLockout() {
-  const lock = document.getElementById("lockout");
-  const cd = document.getElementById("countdown");
-
-  let seconds = 10;
-  lock.style.display = "flex";
-  cd.textContent = seconds;
-
-  const interval = setInterval(() => {
-    seconds--;
-    cd.textContent = seconds;
-    if (seconds <= 0) clearInterval(interval);
-  }, 1000);
-}
-
-/* ================= STOP ================= */
 function stopAll() {
-  timers.forEach(t => clearTimeout(t));
-  timers = [];
-  bar.style.width = "0%";
-  status.textContent = "Stopped";
-
-  const lock = document.getElementById("lockout");
-  if (lock) lock.style.display = "none";
+  while (timeouts.length) clearTimeout(timeouts.pop());
 }
+</script>
+
+</body>
+</html>
