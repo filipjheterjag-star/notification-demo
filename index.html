@@ -8,7 +8,7 @@
 :root{
   --bg:#f4f6f8;
   --card:#ffffff;
-  --text:#000;
+  --text:#111;
   --accent:#4f46e5;
   --danger:#ef4444;
 }
@@ -20,7 +20,7 @@ body.dark{
 body{
   margin:0;
   padding:20px;
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:system-ui,Segoe UI,Arial;
   background:var(--bg);
   color:var(--text);
 }
@@ -28,22 +28,39 @@ body{
   max-width:520px;
   margin:auto;
   background:var(--card);
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 15px 40px rgba(0,0,0,.2);
+  padding:24px;
+  border-radius:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.2);
+  position:relative;
+}
+h2{
+  margin-top:0;
+  font-weight:700;
+  letter-spacing:.3px;
 }
 button{
   width:100%;
-  padding:11px;
+  padding:12px;
   margin-top:10px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   font-size:15px;
+  font-weight:600;
   cursor:pointer;
+  transition:.15s ease;
 }
+button:hover{opacity:.95}
+button:active{transform:scale(.97)}
+
 .primary{background:var(--accent);color:#fff}
 .normal{background:#10b981;color:#fff}
-.danger{background:var(--danger);color:#fff}
+.danger{
+  background:var(--danger);
+  color:#fff;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  box-shadow:0 0 18px rgba(239,68,68,.6);
+}
 .stop{background:#6b7280;color:#fff}
 .panelBtn{background:#0ea5e9;color:#fff}
 
@@ -51,30 +68,31 @@ button{
   background:#fde68a;
   color:#92400e;
   padding:8px;
-  border-radius:6px;
+  border-radius:8px;
   font-size:13px;
   display:none;
+  margin-bottom:10px;
 }
 
 .progress{
-  margin-top:12px;
-  width:100%;
+  margin-top:16px;
   height:14px;
   background:#374151;
-  border-radius:7px;
+  border-radius:8px;
   overflow:hidden;
 }
 .bar{
   height:100%;
   width:0%;
   background:#ef4444;
+  transition:width .15s linear;
 }
 
 .footer{
   text-align:center;
-  font-size:13px;
-  opacity:.7;
-  margin-top:20px;
+  font-size:12px;
+  opacity:.6;
+  margin-top:22px;
 }
 
 /* PANEL */
@@ -86,21 +104,27 @@ button{
   height:100%;
   background:var(--card);
   padding:20px;
-  box-shadow:-10px 0 30px rgba(0,0,0,.3);
+  box-shadow:-12px 0 35px rgba(0,0,0,.3);
   transform:translateX(100%);
-  transition:.3s ease;
+  transition:.35s cubic-bezier(.4,0,.2,1);
   z-index:1000;
   overflow-y:auto;
 }
 .panel.open{transform:translateX(0)}
 
+.panel h3{
+  margin-top:20px;
+  margin-bottom:6px;
+  font-size:15px;
+}
+
 .history{
-  margin-top:10px;
-  font-size:13px;
   background:rgba(0,0,0,.05);
   padding:10px;
-  border-radius:6px;
-  min-height:80px;
+  border-radius:8px;
+  font-size:13px;
+  min-height:90px;
+  line-height:1.5;
 }
 
 /* TOAST */
@@ -111,13 +135,30 @@ button{
   display:flex;
   flex-direction:column;
   gap:10px;
+  z-index:2000;
 }
 .toast{
   background:#111827;
   color:#e5e7eb;
   padding:12px;
-  border-radius:10px;
+  border-radius:12px;
   width:300px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  animation:toastIn .3s ease;
+}
+@keyframes toastIn{
+  from{opacity:0;transform:translateY(10px) scale(.96)}
+  to{opacity:1;transform:none}
+}
+
+/* Demo badge */
+.main::after{
+  content:"🧪 DEMO MODE";
+  position:absolute;
+  top:14px;
+  right:18px;
+  font-size:11px;
+  opacity:.4;
 }
 </style>
 </head>
@@ -133,19 +174,19 @@ button{
 
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
   <button class="normal" onclick="sendOne()">Send Notification</button>
-  <button class="danger" onclick="startHack()">⚠️ Fake Hacked Demo</button>
-  <button class="stop" onclick="stopAll()">🛑 Stop</button>
+  <button class="danger" onclick="startHack()">Fake “Hacked” Demo</button>
+  <button class="stop" onclick="stopAll()">Stop</button>
 
   <div class="progress"><div class="bar" id="bar"></div></div>
 
-  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Panel</button>
+  <button class="panelBtn" onclick="togglePanel()">⚙️ Open Control Panel</button>
 
   <div class="footer">© Copyright FilipoPencil 2026</div>
 </div>
 
 <div class="panel" id="panel">
-  <button class="panelBtn" onclick="togglePanel()">❌ Close</button>
-  <button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+  <button class="panelBtn" onclick="togglePanel()">Close</button>
+  <button class="panelBtn" onclick="toggleDark()">Dark Mode</button>
 
   <h3>📜 Notification History</h3>
   <div class="history" id="history">No notifications yet.</div>
@@ -159,54 +200,50 @@ button{
 
 <script>
 /* OS */
-const isWindows = /Win/i.test(navigator.userAgent);
+const isWindows=/Win/i.test(navigator.userAgent);
 if(isWindows) windowsNotice.style.display="block";
 
 /* STATE */
 let timeouts=[];
 
 /* UI */
-function togglePanel(){ panel.classList.toggle("open"); }
-function toggleDark(){ document.body.classList.toggle("dark"); }
+function togglePanel(){panel.classList.toggle("open")}
+function toggleDark(){document.body.classList.toggle("dark")}
 
-/* HISTORY — FIXED */
+/* HISTORY */
 function log(msg){
-  if(history.dataset.empty!=="false"){
+  if(history.textContent.includes("No notifications"))
     history.innerHTML="";
-    history.dataset.empty="false";
-  }
-  history.innerHTML += "• " + msg + "<br>";
+  history.innerHTML+="• "+msg+"<br>";
 }
 
 /* NOTIFICATIONS */
-function toast(title, body){
-  const t=document.createElement("div");
-  t.className="toast";
-  t.innerHTML=`<strong>${title}</strong><div>${body}</div>`;
-  toastArea.appendChild(t);
-  setTimeout(()=>t.remove(),3000);
+function toast(t,b){
+  const d=document.createElement("div");
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
 }
-
-function send(title, body){
-  if(isWindows) toast(title, body);
+function send(t,b){
+  if(isWindows) toast(t,b);
   else if(Notification.permission==="granted")
-    new Notification(title,{body});
+    new Notification(t,{body:b});
 }
 
 /* ACTIONS */
-function requestPermission(){ Notification.requestPermission(); }
-
+function requestPermission(){Notification.requestPermission()}
 function sendOne(){
-  send("Demo Notification","Hello from the demo!");
-  log("Demo Notification sent");
+  send("Demo Notification","Hello from the demo");
+  log("Demo notification sent");
 }
 
-/* FAKE HACK DEMO */
-const hackMessages=[
+/* FAKE HACK */
+const msgs=[
   "Unauthorized login detected",
-  "IP 192.168.1.42 • Sweden",
-  "Firewall breached",
-  "Session hijacked",
+  "IP 192.168.1.42 • Stockholm",
+  "Firewall bypassed",
+  "Admin privileges granted",
   "Encrypting files",
   "System lock in 3...",
   "System lock in 2...",
@@ -216,18 +253,16 @@ const hackMessages=[
 function startHack(){
   stopAll();
   bar.style.width="0%";
-
   for(let i=1;i<=30;i++){
     const id=setTimeout(()=>{
-      const msg=hackMessages[i%hackMessages.length];
-      send("SECURITY ALERT",msg);
-      log("SECURITY ALERT: "+msg);
+      const m=msgs[i%msgs.length];
+      send("SECURITY ALERT",m);
+      log("SECURITY ALERT: "+m);
       bar.style.width=(i/30*100)+"%";
-    }, i*120);
+    },i*90);
     timeouts.push(id);
   }
 }
-
 function stopAll(){
   while(timeouts.length) clearTimeout(timeouts.pop());
 }
