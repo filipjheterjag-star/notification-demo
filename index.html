@@ -33,8 +33,6 @@ body{
   box-shadow:0 20px 50px rgba(0,0,0,.2);
   position:relative;
 }
-h2{margin-top:0}
-
 button{
   width:100%;
   padding:12px;
@@ -44,9 +42,7 @@ button{
   font-size:15px;
   font-weight:600;
   cursor:pointer;
-  transition:.15s ease;
 }
-button:active{transform:scale(.97)}
 .primary{background:var(--accent);color:#fff}
 .normal{background:#10b981;color:#fff}
 .danger{
@@ -54,7 +50,6 @@ button:active{transform:scale(.97)}
   color:#fff;
   text-transform:uppercase;
   letter-spacing:.8px;
-  box-shadow:0 0 18px rgba(239,68,68,.6);
 }
 .stop{background:#6b7280;color:#fff}
 .panelBtn{background:#0ea5e9;color:#fff}
@@ -66,7 +61,6 @@ button:active{transform:scale(.97)}
   border-radius:8px;
   font-size:13px;
   display:none;
-  margin-bottom:10px;
 }
 
 .progress{
@@ -80,7 +74,6 @@ button:active{transform:scale(.97)}
   height:100%;
   width:0%;
   background:#ef4444;
-  transition:width .15s linear;
 }
 
 .footer{
@@ -106,9 +99,7 @@ button:active{transform:scale(.97)}
   overflow-y:auto;
 }
 .panel.open{transform:translateX(0)}
-.panel h3{margin-top:20px;margin-bottom:6px}
 
-/* HISTORY */
 .history{
   background:rgba(0,0,0,.05);
   padding:10px;
@@ -125,10 +116,9 @@ button:active{transform:scale(.97)}
   font-size:12px;
   padding:10px;
   border-radius:8px;
-  min-height:140px;
-  max-height:220px;
+  min-height:160px;
+  max-height:240px;
   overflow-y:auto;
-  box-shadow:inset 0 0 10px rgba(0,0,0,.6);
 }
 
 /* TOAST */
@@ -139,7 +129,6 @@ button:active{transform:scale(.97)}
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:2000;
 }
 .toast{
   background:#111827;
@@ -147,17 +136,6 @@ button:active{transform:scale(.97)}
   padding:12px;
   border-radius:12px;
   width:300px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
-
-/* Demo badge */
-.main::after{
-  content:"🧪 DEMO MODE";
-  position:absolute;
-  top:14px;
-  right:18px;
-  font-size:11px;
-  opacity:.4;
 }
 </style>
 </head>
@@ -185,16 +163,12 @@ button:active{transform:scale(.97)}
 
 <div class="panel" id="panel">
   <button class="panelBtn" onclick="togglePanel()">Close</button>
-  <button class="panelBtn" onclick="toggleDark()">Dark Mode</button>
 
   <h3>📜 Notification History</h3>
   <div class="history" id="history">No notifications yet.</div>
 
   <h3>🖥️ Terminal Logs</h3>
-  <div class="terminal" id="terminal">root@system:~$ waiting for activity...</div>
-
-  <h3>❓ Help</h3>
-  <p><strong>What is this?</strong><br>Just a harmless demo.</p>
+  <div class="terminal" id="terminal"></div>
 </div>
 
 <div id="toastArea"></div>
@@ -207,7 +181,6 @@ let timeouts=[];
 
 /* UI */
 function togglePanel(){panel.classList.toggle("open")}
-function toggleDark(){document.body.classList.toggle("dark")}
 
 /* HISTORY */
 function log(msg){
@@ -216,9 +189,9 @@ function log(msg){
   history.innerHTML+="• "+msg+"<br>";
 }
 
-/* TERMINAL */
+/* TERMINAL — FIXED */
 function term(msg){
-  terminal.innerHTML += "<br>root@system:~$ " + msg;
+  terminal.innerHTML += "root@system:~$ " + msg + "<br>";
   terminal.scrollTop = terminal.scrollHeight;
 }
 
@@ -266,7 +239,7 @@ const cmds=[
 function startHack(){
   stopAll();
   bar.style.width="0%";
-  terminal.innerHTML="root@system:~$ initiating breach...";
+  term("initiating breach...");
 
   for(let i=1;i<=30;i++){
     const id=setTimeout(()=>{
@@ -280,6 +253,7 @@ function startHack(){
     timeouts.push(id);
   }
 }
+
 function stopAll(){
   while(timeouts.length) clearTimeout(timeouts.pop());
   term("process interrupted");
