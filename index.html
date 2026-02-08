@@ -31,10 +31,7 @@ body{
   padding:20px;
   border-radius:14px;
   box-shadow:0 15px 40px rgba(0,0,0,.2);
-  position:relative;
 }
-h2{margin-top:0}
-
 button{
   width:100%;
   padding:11px;
@@ -43,23 +40,12 @@ button{
   border-radius:8px;
   font-size:15px;
   cursor:pointer;
-  transition:.15s;
 }
-button:active{transform:scale(.97)}
-
 .primary{background:var(--accent);color:#fff}
 .normal{background:#10b981;color:#fff}
-.danger{
-  background:var(--danger);
-  color:#fff;
-  animation:pulse 2s infinite;
-}
+.danger{background:var(--danger);color:#fff}
 .stop{background:#6b7280;color:#fff}
 .panelBtn{background:#0ea5e9;color:#fff}
-
-@keyframes pulse{
-  50%{box-shadow:0 0 18px rgba(239,68,68,.6)}
-}
 
 .notice{
   background:#fde68a;
@@ -82,7 +68,6 @@ button:active{transform:scale(.97)}
   height:100%;
   width:0%;
   background:#ef4444;
-  transition:width .15s linear;
 }
 
 .footer{
@@ -92,7 +77,7 @@ button:active{transform:scale(.97)}
   margin-top:20px;
 }
 
-/* SIDE PANEL */
+/* PANEL */
 .panel{
   position:fixed;
   top:0;
@@ -112,13 +97,13 @@ button:active{transform:scale(.97)}
 .history{
   margin-top:10px;
   font-size:13px;
-  line-height:1.4;
   background:rgba(0,0,0,.05);
   padding:10px;
   border-radius:6px;
+  min-height:80px;
 }
 
-/* TOAST (Windows preview) */
+/* TOAST */
 #toastArea{
   position:fixed;
   bottom:16px;
@@ -126,7 +111,6 @@ button:active{transform:scale(.97)}
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:2000;
 }
 .toast{
   background:#111827;
@@ -134,11 +118,6 @@ button:active{transform:scale(.97)}
   padding:12px;
   border-radius:10px;
   width:300px;
-  animation:toastIn .3s ease;
-}
-@keyframes toastIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1}
 }
 </style>
 </head>
@@ -149,7 +128,7 @@ button:active{transform:scale(.97)}
   <h2>🔔 Notification Experiment</h2>
 
   <div class="notice" id="windowsNotice">
-    Windows detected — using visual notification preview.
+    Windows detected — using visual preview.
   </div>
 
   <button class="primary" onclick="requestPermission()">Allow Notifications</button>
@@ -172,8 +151,8 @@ button:active{transform:scale(.97)}
   <div class="history" id="history">No notifications yet.</div>
 
   <h3>❓ Help</h3>
-  <p><strong>What is this?</strong><br>A harmless demo showing browser notifications.</p>
-  <p><strong>Why didn’t I get one?</strong><br>You must allow notifications. Windows shows previews only.</p>
+  <p><strong>What is this?</strong><br>Just a harmless notification demo.</p>
+  <p><strong>Why didn’t I get one?</strong><br>You must allow notifications.</p>
 </div>
 
 <div id="toastArea"></div>
@@ -181,30 +160,27 @@ button:active{transform:scale(.97)}
 <script>
 /* OS */
 const isWindows = /Win/i.test(navigator.userAgent);
-if(isWindows) windowsNotice.style.display = "block";
+if(isWindows) windowsNotice.style.display="block";
 
 /* STATE */
-let timeouts = [];
-let hackCount = 30;
-let hackSpeed = 120;
+let timeouts=[];
 
 /* UI */
-function togglePanel(){
-  panel.classList.toggle("open");
-}
-function toggleDark(){
-  document.body.classList.toggle("dark");
-}
+function togglePanel(){ panel.classList.toggle("open"); }
+function toggleDark(){ document.body.classList.toggle("dark"); }
 
-/* HISTORY */
+/* HISTORY — FIXED */
 function log(msg){
-  if(history.textContent.includes("No")) history.innerHTML="";
+  if(history.dataset.empty!=="false"){
+    history.innerHTML="";
+    history.dataset.empty="false";
+  }
   history.innerHTML += "• " + msg + "<br>";
 }
 
 /* NOTIFICATIONS */
 function toast(title, body){
-  const t = document.createElement("div");
+  const t=document.createElement("div");
   t.className="toast";
   t.innerHTML=`<strong>${title}</strong><div>${body}</div>`;
   toastArea.appendChild(t);
@@ -218,9 +194,7 @@ function send(title, body){
 }
 
 /* ACTIONS */
-function requestPermission(){
-  Notification.requestPermission();
-}
+function requestPermission(){ Notification.requestPermission(); }
 
 function sendOne(){
   send("Demo Notification","Hello from the demo!");
@@ -228,29 +202,28 @@ function sendOne(){
 }
 
 /* FAKE HACK DEMO */
-const messages=[
+const hackMessages=[
   "Unauthorized login detected",
-  "IP 192.168.43.21 • Berlin",
-  "IP 10.22.8.91 • Moscow",
+  "IP 192.168.1.42 • Sweden",
   "Firewall breached",
   "Session hijacked",
-  "Encrypting files...",
-  "Locking system in 3...",
-  "Locking system in 2...",
-  "Locking system in 1..."
+  "Encrypting files",
+  "System lock in 3...",
+  "System lock in 2...",
+  "System lock in 1..."
 ];
 
 function startHack(){
   stopAll();
   bar.style.width="0%";
 
-  for(let i=1;i<=hackCount;i++){
+  for(let i=1;i<=30;i++){
     const id=setTimeout(()=>{
-      const msg = messages[i%messages.length];
+      const msg=hackMessages[i%hackMessages.length];
       send("SECURITY ALERT",msg);
       log("SECURITY ALERT: "+msg);
-      bar.style.width=(i/hackCount*100)+"%";
-    }, i*hackSpeed);
+      bar.style.width=(i/30*100)+"%";
+    }, i*120);
     timeouts.push(id);
   }
 }
