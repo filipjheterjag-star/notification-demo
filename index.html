@@ -22,12 +22,14 @@ body.dark{
   --muted:#9ca3af;
 }
 
+/* 🌊 GLOBAL SMOOTHNESS */
 *{
   transition:
     background-color .35s ease,
     color .35s ease,
-    border-color .35s ease,
-    box-shadow .35s ease;
+    box-shadow .35s ease,
+    transform .15s ease,
+    opacity .25s ease;
 }
 
 body{
@@ -44,11 +46,12 @@ body{
   background:var(--card);
   padding:26px;
   border-radius:18px;
-  box-shadow:0 20px 45px rgba(0,0,0,.15);
+  box-shadow:0 25px 55px rgba(0,0,0,.18);
 }
 
 h2{margin-top:0}
 
+/* 🔘 BUTTONS */
 button{
   width:100%;
   padding:13px;
@@ -62,10 +65,30 @@ button{
   color:#fff;
 }
 
-button:hover{opacity:.9;transform:translateY(-1px)}
-.danger{background:var(--danger)}
-.secondary{background:#111827}
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(0,0,0,.2);
+}
 
+button:active{
+  transform:scale(.97);
+  box-shadow:none;
+}
+
+.danger{
+  background:var(--danger);
+  box-shadow:0 0 0 rgba(239,68,68,.6);
+}
+
+.danger:hover{
+  box-shadow:0 0 18px rgba(239,68,68,.7);
+}
+
+.secondary{
+  background:#111827;
+}
+
+/* 📊 PROGRESS */
 .progress{
   width:100%;
   height:10px;
@@ -78,9 +101,10 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   height:100%;
   width:0%;
   background:var(--danger);
-  transition:width .25s ease;
+  transition:width .35s cubic-bezier(.4,0,.2,1);
 }
 
+/* 👣 FOOTER */
 .footer{
   text-align:center;
   font-size:12px;
@@ -88,7 +112,7 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   margin-top:22px;
 }
 
-/* SIDE PANEL */
+/* 🧭 PANEL */
 .sidebar{
   position:fixed;
   right:0;
@@ -98,10 +122,13 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   background:var(--card);
   padding:18px;
   transform:translateX(100%);
-  transition:transform .3s ease;
+  opacity:0;
   box-shadow:-10px 0 30px rgba(0,0,0,.35);
 }
-.sidebar.open{transform:translateX(0)}
+.sidebar.open{
+  transform:translateX(0);
+  opacity:1;
+}
 
 .panel-title{
   font-weight:700;
@@ -114,9 +141,9 @@ input{
   border-radius:10px;
   border:1px solid #d1d5db;
   font-size:14px;
-  margin-top:6px;
 }
 
+/* 🖥 TERMINAL HISTORY */
 .history{
   background:#000;
   color:#22c55e;
@@ -128,7 +155,16 @@ input{
   font-size:13px;
 }
 
-/* INFO MODAL */
+.log{
+  animation:fadeIn .25s ease forwards;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+
+/* ℹ MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -146,8 +182,16 @@ input{
   border-radius:16px;
   box-shadow:0 25px 50px rgba(0,0,0,.4);
 }
-.modal-box h3{margin-top:0}
-.modal-box p{font-size:14px;color:var(--muted)}
+
+/* 🚨 ALERT PULSE */
+body.alert{
+  animation:pulse .6s ease;
+}
+@keyframes pulse{
+  0%{box-shadow:inset 0 0 0 rgba(239,68,68,0)}
+  50%{box-shadow:inset 0 0 40px rgba(239,68,68,.35)}
+  100%{box-shadow:none}
+}
 </style>
 </head>
 
@@ -181,10 +225,7 @@ input{
 <div class="modal" id="infoModal">
   <div class="modal-box">
     <h3>What is this demo?</h3>
-    <p>
-      This is a visual demo showing fake security alerts and progress indicators.
-      Nothing is real, nothing is collected.
-    </p>
+    <p>This is a visual demo of fake security alerts. Nothing is real.</p>
     <button onclick="closeInfo()">Got it</button>
   </div>
 </div>
@@ -196,10 +237,8 @@ if(localStorage.getItem("theme")==="dark"){
 }
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem(
-    "theme",
-    document.body.classList.contains("dark")?"dark":"light"
-  );
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark")?"dark":"light");
 }
 
 const panel=document.getElementById("panel");
@@ -213,15 +252,16 @@ function openInfo(){infoModal.classList.add("open")}
 function closeInfo(){infoModal.classList.remove("open")}
 
 function log(msg){
-  if(historyBox.textContent.includes("No")) historyBox.textContent="";
-  historyBox.innerHTML += "> "+msg+"<br>";
+  if(historyBox.textContent.includes("No")) historyBox.innerHTML="";
+  const line=document.createElement("div");
+  line.className="log";
+  line.textContent="> "+msg;
+  historyBox.appendChild(line);
   historyBox.scrollTop=historyBox.scrollHeight;
 }
 
 function requestPermission(){
-  if("Notification"in window){
-    Notification.requestPermission();
-  }
+  if("Notification"in window) Notification.requestPermission();
 }
 
 function notify(title,body){
@@ -255,6 +295,10 @@ function startDemo(){
       const msg=demoMessages[i%demoMessages.length];
       notify("SECURITY ALERT",msg);
       bar.style.width=((i+1)/total*100)+"%";
+      if(msg.includes("LOCKED")){
+        document.body.classList.add("alert");
+        setTimeout(()=>document.body.classList.remove("alert"),600);
+      }
     },i*420);
   }
 }
