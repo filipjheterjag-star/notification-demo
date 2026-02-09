@@ -22,7 +22,6 @@ body.dark{
   --muted:#9ca3af;
 }
 
-/* 🔥 Smooth global transitions */
 *{
   transition:
     background-color .35s ease,
@@ -63,11 +62,7 @@ button{
   color:#fff;
 }
 
-button:hover{
-  opacity:.9;
-  transform:translateY(-1px);
-}
-
+button:hover{opacity:.9;transform:translateY(-1px)}
 .danger{background:var(--danger)}
 .secondary{background:#111827}
 
@@ -103,7 +98,7 @@ button:hover{
   background:var(--card);
   padding:18px;
   transform:translateX(100%);
-  transition:transform .3s ease, background-color .35s ease;
+  transition:transform .3s ease;
   box-shadow:-10px 0 30px rgba(0,0,0,.35);
 }
 .sidebar.open{transform:translateX(0)}
@@ -111,6 +106,15 @@ button:hover{
 .panel-title{
   font-weight:700;
   margin:14px 0 8px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  margin-top:6px;
 }
 
 .history{
@@ -167,6 +171,9 @@ button:hover{
   <button class="secondary" onclick="togglePanel()">❌ Close</button>
   <button onclick="toggleDark()">🌙 Toggle Dark Mode</button>
 
+  <div class="panel-title">Demo notifications</div>
+  <input id="demoCount" type="number" min="3" max="100" value="12">
+
   <div class="panel-title">History</div>
   <div class="history" id="history">No notifications yet.</div>
 </div>
@@ -175,8 +182,8 @@ button:hover{
   <div class="modal-box">
     <h3>What is this demo?</h3>
     <p>
-      This is a visual demonstration of fake security alerts and progress
-      indicators. Nothing is real or collected.
+      This is a visual demo showing fake security alerts and progress indicators.
+      Nothing is real, nothing is collected.
     </p>
     <button onclick="closeInfo()">Got it</button>
   </div>
@@ -199,6 +206,7 @@ const panel=document.getElementById("panel");
 const historyBox=document.getElementById("history");
 const bar=document.getElementById("bar");
 const infoModal=document.getElementById("infoModal");
+const demoCountInput=document.getElementById("demoCount");
 
 function togglePanel(){panel.classList.toggle("open")}
 function openInfo(){infoModal.classList.add("open")}
@@ -227,29 +235,28 @@ function sendTest(){
   notify("Demo","This is a test notification");
 }
 
-const demoSteps=[
+const demoMessages=[
   "Initiating breach…",
   "Firewall bypassed",
   "Unauthorized access detected",
   "Extracting credentials",
   "Encrypting files",
-  "LOCKDOWN IN 5",
-  "LOCKDOWN IN 4",
-  "LOCKDOWN IN 3",
-  "LOCKDOWN IN 2",
-  "LOCKDOWN IN 1",
+  "IP traced",
   "SYSTEM LOCKED"
 ];
 
 function startDemo(){
   bar.style.width="0%";
   historyBox.innerHTML="";
-  demoSteps.forEach((msg,i)=>{
+  const total=Math.max(3,Number(demoCountInput.value)||12);
+
+  for(let i=0;i<total;i++){
     setTimeout(()=>{
+      const msg=demoMessages[i%demoMessages.length];
       notify("SECURITY ALERT",msg);
-      bar.style.width=((i+1)/demoSteps.length*100)+"%";
+      bar.style.width=((i+1)/total*100)+"%";
     },i*420);
-  });
+  }
 }
 </script>
 
