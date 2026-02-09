@@ -11,6 +11,7 @@
   --text:#111827;
   --accent:#4f46e5;
   --danger:#ef4444;
+  --muted:#6b7280;
 }
 
 body.dark{
@@ -18,11 +19,12 @@ body.dark{
   --card:#020617;
   --text:#e5e7eb;
   --accent:#22c55e;
+  --muted:#9ca3af;
 }
 
 body{
   margin:0;
-  padding:20px;
+  padding:24px;
   font-family:system-ui, Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
@@ -30,28 +32,36 @@ body{
 }
 
 .main{
-  max-width:520px;
+  max-width:540px;
   margin:auto;
   background:var(--card);
-  padding:22px;
-  border-radius:14px;
-  box-shadow:0 15px 40px rgba(0,0,0,.15);
+  padding:26px;
+  border-radius:18px;
+  box-shadow:0 20px 45px rgba(0,0,0,.15);
 }
+
+h2{margin-top:0}
 
 button{
   width:100%;
-  padding:12px;
+  padding:13px;
   margin-top:10px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   font-size:15px;
   font-weight:600;
   cursor:pointer;
   background:var(--accent);
   color:#fff;
+  transition:.15s;
 }
 
+button:hover{opacity:.9;transform:translateY(-1px)}
 .danger{background:var(--danger)}
+.secondary{
+  background:#111827;
+}
+.secondary:hover{opacity:.95}
 
 .progress{
   width:100%;
@@ -59,45 +69,72 @@ button{
   background:#e5e7eb;
   border-radius:6px;
   overflow:hidden;
-  margin-top:14px;
+  margin-top:16px;
 }
 .bar{
   height:100%;
   width:0%;
   background:var(--danger);
-}
-
-.sidebar{
-  position:fixed;
-  right:0;
-  top:0;
-  width:320px;
-  height:100%;
-  background:var(--card);
-  padding:16px;
-  transform:translateX(100%);
-  transition:.3s;
-  box-shadow:-10px 0 30px rgba(0,0,0,.4);
-}
-.sidebar.open{transform:translateX(0)}
-
-.history{
-  background:#000;
-  color:#22c55e;
-  padding:10px;
-  border-radius:10px;
-  font-family:monospace;
-  height:240px;
-  overflow-y:auto;
-  font-size:13px;
+  transition:width .2s;
 }
 
 .footer{
   text-align:center;
   font-size:12px;
-  opacity:.6;
-  margin-top:20px;
+  color:var(--muted);
+  margin-top:22px;
 }
+
+/* SIDE PANEL */
+.sidebar{
+  position:fixed;
+  right:0;
+  top:0;
+  width:340px;
+  height:100%;
+  background:var(--card);
+  padding:18px;
+  transform:translateX(100%);
+  transition:.3s;
+  box-shadow:-10px 0 30px rgba(0,0,0,.35);
+}
+.sidebar.open{transform:translateX(0)}
+
+.panel-title{
+  font-weight:700;
+  margin:14px 0 8px;
+}
+
+.history{
+  background:#000;
+  color:#22c55e;
+  padding:12px;
+  border-radius:12px;
+  font-family:monospace;
+  height:220px;
+  overflow-y:auto;
+  font-size:13px;
+}
+
+/* INFO MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal.open{display:flex}
+.modal-box{
+  max-width:420px;
+  background:var(--card);
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 25px 50px rgba(0,0,0,.4);
+}
+.modal-box h3{margin-top:0}
+.modal-box p{font-size:14px;color:var(--muted)}
 </style>
 </head>
 
@@ -109,40 +146,59 @@ button{
   <button onclick="requestPermission()">Allow Notifications</button>
   <button onclick="sendTest()">Send Test Notification</button>
   <button class="danger" onclick="startDemo()">⚠ Fake Hacked Demo</button>
-  <button onclick="togglePanel()">⚙ Controls</button>
+  <button class="secondary" onclick="togglePanel()">⚙ Controls</button>
+  <button class="secondary" onclick="openInfo()">ℹ What is this demo?</button>
 
   <div class="progress"><div class="bar" id="bar"></div></div>
 
   <div class="footer">© FilipoPencil 2026</div>
 </div>
 
+<!-- CONTROL PANEL -->
 <div class="sidebar" id="panel">
-  <button onclick="togglePanel()">❌ Close</button>
+  <button class="secondary" onclick="togglePanel()">❌ Close</button>
   <button onclick="toggleDark()">🌙 Toggle Dark Mode</button>
 
-  <h3>History</h3>
+  <div class="panel-title">History</div>
   <div class="history" id="history">No notifications yet.</div>
 </div>
 
+<!-- INFO MODAL -->
+<div class="modal" id="infoModal">
+  <div class="modal-box">
+    <h3>What is this demo?</h3>
+    <p>
+      This is a <strong>visual demo</strong> showing how fake security alerts,
+      notifications, and progress indicators can look during a simulated
+      “hacked” scenario.
+    </p>
+    <p>
+      It does <strong>not</strong> hack anything, collect data, or access your system.
+      Everything you see is client-side and purely for demonstration.
+    </p>
+    <button onclick="closeInfo()">Got it</button>
+  </div>
+</div>
+
 <script>
-/* Dark mode load */
+/* Dark mode */
 if(localStorage.getItem("theme")==="dark"){
   document.body.classList.add("dark");
 }
-
 function toggleDark(){
   document.body.classList.toggle("dark");
   localStorage.setItem("theme",
     document.body.classList.contains("dark")?"dark":"light");
 }
 
+const panel=document.getElementById("panel");
 const historyBox=document.getElementById("history");
 const bar=document.getElementById("bar");
-const panel=document.getElementById("panel");
+const infoModal=document.getElementById("infoModal");
 
-function togglePanel(){
-  panel.classList.toggle("open");
-}
+function togglePanel(){panel.classList.toggle("open")}
+function openInfo(){infoModal.classList.add("open")}
+function closeInfo(){infoModal.classList.remove("open")}
 
 function log(msg){
   if(historyBox.textContent.includes("No")) historyBox.textContent="";
@@ -173,7 +229,6 @@ const demoSteps=[
   "Unauthorized access detected",
   "Extracting credentials",
   "IP traced: 185.21.44.92",
-  "Location: Unknown",
   "Encrypting files",
   "LOCKDOWN IN 5",
   "LOCKDOWN IN 4",
@@ -190,7 +245,7 @@ function startDemo(){
     setTimeout(()=>{
       notify("SECURITY ALERT",msg);
       bar.style.width=((i+1)/demoSteps.length*100)+"%";
-    },i*400);
+    },i*420);
   });
 }
 </script>
