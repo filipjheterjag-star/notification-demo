@@ -23,18 +23,13 @@ body.dark{
 }
 
 *{
-  transition:
-    background-color .35s ease,
-    color .35s ease,
-    box-shadow .35s ease,
-    transform .15s ease,
-    opacity .25s ease;
+  transition:background-color .35s,color .35s,box-shadow .35s,transform .15s;
 }
 
 body{
   margin:0;
   padding:24px;
-  font-family:system-ui, Arial, sans-serif;
+  font-family:system-ui,Arial;
   background:var(--bg);
   color:var(--text);
 }
@@ -48,37 +43,23 @@ body{
   box-shadow:0 25px 55px rgba(0,0,0,.18);
 }
 
-h2{margin-top:0}
-
 button{
   width:100%;
   padding:13px;
   margin-top:10px;
   border:none;
   border-radius:12px;
-  font-size:15px;
   font-weight:600;
   cursor:pointer;
   background:var(--accent);
   color:#fff;
 }
 
-button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 18px rgba(0,0,0,.2);
-}
+button:hover{transform:translateY(-2px)}
+button:active{transform:scale(.97)}
 
-button:active{
-  transform:scale(.97);
-  box-shadow:none;
-}
-
-.danger{
-  background:var(--danger);
-}
-.secondary{
-  background:#111827;
-}
+.secondary{background:#111827}
+.danger{background:var(--danger)}
 
 .progress{
   width:100%;
@@ -92,72 +73,49 @@ button:active{
   height:100%;
   width:0%;
   background:var(--danger);
-  transition:width .35s cubic-bezier(.4,0,.2,1);
 }
 
-.footer{
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-  margin-top:22px;
-}
-
-/* PANEL */
 .sidebar{
   position:fixed;
-  right:0;
-  top:0;
-  width:360px;
-  height:100%;
+  right:0;top:0;
+  width:360px;height:100%;
   background:var(--card);
   padding:18px;
   transform:translateX(100%);
-  opacity:0;
   box-shadow:-10px 0 30px rgba(0,0,0,.35);
 }
-.sidebar.open{
-  transform:translateX(0);
-  opacity:1;
-}
+.sidebar.open{transform:translateX(0)}
 
-.panel-title{
-  font-weight:700;
-  margin:16px 0 8px;
-}
+.panel-title{margin:14px 0 6px;font-weight:700}
 
 input{
   width:100%;
   padding:10px;
   border-radius:10px;
   border:1px solid #d1d5db;
-  font-size:14px;
 }
 
 .history{
   background:#000;
   color:#22c55e;
-  padding:12px;
-  border-radius:12px;
   font-family:monospace;
+  padding:10px;
+  border-radius:10px;
   height:180px;
   overflow-y:auto;
-  font-size:13px;
 }
 
-/* STATUS BOX */
 .status{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns:repeat(3,1fr);
   gap:10px;
-  margin-top:10px;
 }
 .stat{
   background:#111827;
   color:#fff;
-  border-radius:10px;
   padding:10px;
+  border-radius:10px;
   text-align:center;
-  font-size:13px;
 }
 .stat span{
   display:block;
@@ -165,7 +123,6 @@ input{
   font-weight:700;
 }
 
-/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -173,15 +130,12 @@ input{
   display:none;
   align-items:center;
   justify-content:center;
-  backdrop-filter:blur(6px);
 }
 .modal.open{display:flex}
 .modal-box{
-  max-width:420px;
   background:var(--card);
   padding:22px;
   border-radius:16px;
-  box-shadow:0 25px 50px rgba(0,0,0,.4);
 }
 </style>
 </head>
@@ -198,8 +152,6 @@ input{
   <button class="secondary" onclick="openInfo()">ℹ What is this demo?</button>
 
   <div class="progress"><div class="bar" id="bar"></div></div>
-
-  <div class="footer">© FilipoPencil 2026</div>
 </div>
 
 <div class="sidebar" id="panel">
@@ -209,81 +161,97 @@ input{
   <div class="panel-title">Demo notifications</div>
   <input id="demoCount" type="number" min="3" max="100" value="12">
 
-  <div class="panel-title">Notification status</div>
+  <div class="panel-title">Session stats</div>
   <div class="status">
-    <div class="stat">Sent<span id="sent">0</span></div>
-    <div class="stat">Blocked<span id="blocked">0</span></div>
-    <div class="stat">Total<span id="total">0</span></div>
+    <div class="stat">Sent<span id="sSent">0</span></div>
+    <div class="stat">Blocked<span id="sBlocked">0</span></div>
+    <div class="stat">Total<span id="sTotal">0</span></div>
+  </div>
+
+  <div class="panel-title">Lifetime stats</div>
+  <div class="status">
+    <div class="stat">Sent<span id="lSent">0</span></div>
+    <div class="stat">Blocked<span id="lBlocked">0</span></div>
+    <div class="stat">Total<span id="lTotal">0</span></div>
   </div>
 
   <div class="panel-title">History</div>
   <div class="history" id="history">No notifications yet.</div>
 </div>
 
-<div class="modal" id="infoModal">
+<div class="modal" id="info">
   <div class="modal-box">
     <h3>What is this demo?</h3>
-    <p>This is a visual demo of fake security alerts. Nothing is real.</p>
-    <button onclick="closeInfo()">Got it</button>
+    <p>This is a fake security alert demo. Nothing is real.</p>
+    <button onclick="closeInfo()">OK</button>
   </div>
 </div>
 
 <script>
-/* DARK MODE */
-if(localStorage.getItem("theme")==="dark"){
-  document.body.classList.add("dark");
-}
+/* THEME */
+if(localStorage.theme==="dark") document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("theme",
-    document.body.classList.contains("dark")?"dark":"light");
+  localStorage.theme=document.body.classList.contains("dark")?"dark":"light";
 }
 
+/* PANEL */
 const panel=document.getElementById("panel");
-const historyBox=document.getElementById("history");
-const bar=document.getElementById("bar");
-const infoModal=document.getElementById("infoModal");
-const demoCountInput=document.getElementById("demoCount");
-
-/* STATS */
-let sent=0, blocked=0, total=0;
-const sentEl=document.getElementById("sent");
-const blockedEl=document.getElementById("blocked");
-const totalEl=document.getElementById("total");
-
-function updateStats(){
-  sentEl.textContent=sent;
-  blockedEl.textContent=blocked;
-  totalEl.textContent=total;
-}
-
 function togglePanel(){panel.classList.toggle("open")}
-function openInfo(){infoModal.classList.add("open")}
-function closeInfo(){infoModal.classList.remove("open")}
 
+/* MODAL */
+const info=document.getElementById("info");
+function openInfo(){info.classList.add("open")}
+function closeInfo(){info.classList.remove("open")}
+
+/* HISTORY */
+const historyBox=document.getElementById("history");
 function log(msg){
   if(historyBox.textContent.includes("No")) historyBox.innerHTML="";
-  historyBox.innerHTML += "> "+msg+"<br>";
+  historyBox.innerHTML+="> "+msg+"<br>";
   historyBox.scrollTop=historyBox.scrollHeight;
 }
 
+/* STATS */
+let session={sent:0,blocked:0,total:0};
+let lifetime=JSON.parse(localStorage.lifetimeStats||'{"sent":0,"blocked":0,"total":0}');
+
+const ids={
+  sSent:sSent=document.getElementById("sSent"),
+  sBlocked:document.getElementById("sBlocked"),
+  sTotal:document.getElementById("sTotal"),
+  lSent:document.getElementById("lSent"),
+  lBlocked:document.getElementById("lBlocked"),
+  lTotal:document.getElementById("lTotal")
+};
+
+function updateStats(){
+  sSent.textContent=session.sent;
+  sBlocked.textContent=session.blocked;
+  sTotal.textContent=session.total;
+  lSent.textContent=lifetime.sent;
+  lBlocked.textContent=lifetime.blocked;
+  lTotal.textContent=lifetime.total;
+  localStorage.lifetimeStats=JSON.stringify(lifetime);
+}
+updateStats();
+
+/* NOTIFICATIONS */
 function requestPermission(){
-  if("Notification"in window){
-    Notification.requestPermission();
-  }
+  if("Notification"in window) Notification.requestPermission();
 }
 
 function notify(title,body){
-  total++;
+  session.total++; lifetime.total++;
   if("Notification"in window && Notification.permission==="granted"){
     try{
       new Notification(title,{body});
-      sent++;
+      session.sent++; lifetime.sent++;
     }catch{
-      blocked++;
+      session.blocked++; lifetime.blocked++;
     }
   }else{
-    blocked++;
+    session.blocked++; lifetime.blocked++;
   }
   updateStats();
   log(body);
@@ -293,26 +261,27 @@ function sendTest(){
   notify("Demo","This is a test notification");
 }
 
-const demoMessages=[
+/* DEMO */
+const messages=[
   "Initiating breach…",
   "Firewall bypassed",
-  "Unauthorized access detected",
-  "Extracting credentials",
+  "Access granted",
+  "Extracting data",
   "Encrypting files",
   "IP traced",
   "SYSTEM LOCKED"
 ];
+const bar=document.getElementById("bar");
+const demoCount=document.getElementById("demoCount");
 
 function startDemo(){
   bar.style.width="0%";
   historyBox.innerHTML="";
-  const totalDemo=Math.max(3,Number(demoCountInput.value)||12);
-
-  for(let i=0;i<totalDemo;i++){
+  const count=Math.max(3,+demoCount.value||12);
+  for(let i=0;i<count;i++){
     setTimeout(()=>{
-      const msg=demoMessages[i%demoMessages.length];
-      notify("SECURITY ALERT",msg);
-      bar.style.width=((i+1)/totalDemo*100)+"%";
+      notify("SECURITY ALERT",messages[i%messages.length]);
+      bar.style.width=((i+1)/count*100)+"%";
     },i*420);
   }
 }
