@@ -10,6 +10,7 @@
   --card:#ffffff;
   --text:#111827;
   --accent:#4f46e5;
+  --success:#22c55e;
   --danger:#ef4444;
   --muted:#6b7280;
 }
@@ -19,11 +20,10 @@ body.dark{
   --card:#020617;
   --text:#e5e7eb;
   --accent:#22c55e;
-  --muted:#9ca3af;
 }
 
 *{
-  transition:background-color .35s,color .35s,box-shadow .35s,transform .15s;
+  transition:background-color .35s,color .35s,box-shadow .35s,transform .2s;
 }
 
 body{
@@ -39,8 +39,8 @@ body{
   margin:auto;
   background:var(--card);
   padding:26px;
-  border-radius:18px;
-  box-shadow:0 25px 55px rgba(0,0,0,.18);
+  border-radius:20px;
+  box-shadow:0 30px 60px rgba(0,0,0,.18);
 }
 
 button{
@@ -48,7 +48,7 @@ button{
   padding:13px;
   margin-top:10px;
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   font-weight:600;
   cursor:pointer;
   background:var(--accent);
@@ -73,25 +73,29 @@ button:active{transform:scale(.97)}
   height:100%;
   width:0%;
   background:var(--danger);
+  transition:width .4s ease;
 }
 
 .sidebar{
   position:fixed;
   right:0;top:0;
-  width:360px;height:100%;
+  width:380px;height:100%;
   background:var(--card);
   padding:18px;
   transform:translateX(100%);
-  box-shadow:-10px 0 30px rgba(0,0,0,.35);
+  box-shadow:-12px 0 35px rgba(0,0,0,.35);
 }
 .sidebar.open{transform:translateX(0)}
 
-.panel-title{margin:14px 0 6px;font-weight:700}
+.panel-title{
+  margin:14px 0 6px;
+  font-weight:700;
+}
 
 input{
   width:100%;
   padding:10px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #d1d5db;
 }
 
@@ -100,7 +104,7 @@ input{
   color:#22c55e;
   font-family:monospace;
   padding:10px;
-  border-radius:10px;
+  border-radius:12px;
   height:180px;
   overflow-y:auto;
 }
@@ -110,17 +114,32 @@ input{
   grid-template-columns:repeat(3,1fr);
   gap:10px;
 }
+
 .stat{
   background:#111827;
   color:#fff;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:14px;
   text-align:center;
+  position:relative;
+  overflow:hidden;
 }
+
+.stat.success{box-shadow:0 0 0 1px var(--success)}
+.stat.blocked{box-shadow:0 0 0 1px var(--danger)}
+
 .stat span{
   display:block;
-  font-size:20px;
-  font-weight:700;
+  font-size:22px;
+  font-weight:800;
+}
+
+.icon{
+  position:absolute;
+  top:8px;
+  right:10px;
+  font-size:16px;
+  opacity:.85;
 }
 
 .modal{
@@ -135,7 +154,7 @@ input{
 .modal-box{
   background:var(--card);
   padding:22px;
-  border-radius:16px;
+  border-radius:18px;
 }
 </style>
 </head>
@@ -163,15 +182,15 @@ input{
 
   <div class="panel-title">Session stats</div>
   <div class="status">
-    <div class="stat">Sent<span id="sSent">0</span></div>
-    <div class="stat">Blocked<span id="sBlocked">0</span></div>
+    <div class="stat success">Sent<span id="sSent">0</span><div class="icon">✓</div></div>
+    <div class="stat blocked">Blocked<span id="sBlocked">0</span><div class="icon">✕</div></div>
     <div class="stat">Total<span id="sTotal">0</span></div>
   </div>
 
   <div class="panel-title">Lifetime stats</div>
   <div class="status">
-    <div class="stat">Sent<span id="lSent">0</span></div>
-    <div class="stat">Blocked<span id="lBlocked">0</span></div>
+    <div class="stat success">Sent<span id="lSent">0</span><div class="icon">✓</div></div>
+    <div class="stat blocked">Blocked<span id="lBlocked">0</span><div class="icon">✕</div></div>
     <div class="stat">Total<span id="lTotal">0</span></div>
   </div>
 
@@ -212,26 +231,29 @@ function log(msg){
   historyBox.scrollTop=historyBox.scrollHeight;
 }
 
+/* ANIMATED COUNTERS */
+function animate(el,from,to){
+  const start=performance.now();
+  const dur=350;
+  function frame(t){
+    const p=Math.min((t-start)/dur,1);
+    el.textContent=Math.floor(from+(to-from)*p);
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
 /* STATS */
 let session={sent:0,blocked:0,total:0};
 let lifetime=JSON.parse(localStorage.lifetimeStats||'{"sent":0,"blocked":0,"total":0}');
 
-const ids={
-  sSent:sSent=document.getElementById("sSent"),
-  sBlocked:document.getElementById("sBlocked"),
-  sTotal:document.getElementById("sTotal"),
-  lSent:document.getElementById("lSent"),
-  lBlocked:document.getElementById("lBlocked"),
-  lTotal:document.getElementById("lTotal")
-};
-
 function updateStats(){
-  sSent.textContent=session.sent;
-  sBlocked.textContent=session.blocked;
-  sTotal.textContent=session.total;
-  lSent.textContent=lifetime.sent;
-  lBlocked.textContent=lifetime.blocked;
-  lTotal.textContent=lifetime.total;
+  animate(sSent,+sSent.textContent,session.sent);
+  animate(sBlocked,+sBlocked.textContent,session.blocked);
+  animate(sTotal,+sTotal.textContent,session.total);
+  animate(lSent,+lSent.textContent,lifetime.sent);
+  animate(lBlocked,+lBlocked.textContent,lifetime.blocked);
+  animate(lTotal,+lTotal.textContent,lifetime.total);
   localStorage.lifetimeStats=JSON.stringify(lifetime);
 }
 updateStats();
@@ -282,7 +304,7 @@ function startDemo(){
     setTimeout(()=>{
       notify("SECURITY ALERT",messages[i%messages.length]);
       bar.style.width=((i+1)/count*100)+"%";
-    },i*420);
+    },i*380);
   }
 }
 </script>
