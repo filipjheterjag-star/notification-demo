@@ -22,13 +22,21 @@ body.dark{
   --muted:#9ca3af;
 }
 
+/* 🔥 Smooth global transitions */
+*{
+  transition:
+    background-color .35s ease,
+    color .35s ease,
+    border-color .35s ease,
+    box-shadow .35s ease;
+}
+
 body{
   margin:0;
   padding:24px;
   font-family:system-ui, Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
-  transition:.2s;
 }
 
 .main{
@@ -53,15 +61,15 @@ button{
   cursor:pointer;
   background:var(--accent);
   color:#fff;
-  transition:.15s;
 }
 
-button:hover{opacity:.9;transform:translateY(-1px)}
-.danger{background:var(--danger)}
-.secondary{
-  background:#111827;
+button:hover{
+  opacity:.9;
+  transform:translateY(-1px);
 }
-.secondary:hover{opacity:.95}
+
+.danger{background:var(--danger)}
+.secondary{background:#111827}
 
 .progress{
   width:100%;
@@ -75,7 +83,7 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   height:100%;
   width:0%;
   background:var(--danger);
-  transition:width .2s;
+  transition:width .25s ease;
 }
 
 .footer{
@@ -95,7 +103,7 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   background:var(--card);
   padding:18px;
   transform:translateX(100%);
-  transition:.3s;
+  transition:transform .3s ease, background-color .35s ease;
   box-shadow:-10px 0 30px rgba(0,0,0,.35);
 }
 .sidebar.open{transform:translateX(0)}
@@ -124,6 +132,7 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   display:none;
   align-items:center;
   justify-content:center;
+  backdrop-filter:blur(6px);
 }
 .modal.open{display:flex}
 .modal-box{
@@ -154,7 +163,6 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   <div class="footer">© FilipoPencil 2026</div>
 </div>
 
-<!-- CONTROL PANEL -->
 <div class="sidebar" id="panel">
   <button class="secondary" onclick="togglePanel()">❌ Close</button>
   <button onclick="toggleDark()">🌙 Toggle Dark Mode</button>
@@ -163,18 +171,12 @@ button:hover{opacity:.9;transform:translateY(-1px)}
   <div class="history" id="history">No notifications yet.</div>
 </div>
 
-<!-- INFO MODAL -->
 <div class="modal" id="infoModal">
   <div class="modal-box">
     <h3>What is this demo?</h3>
     <p>
-      This is a <strong>visual demo</strong> showing how fake security alerts,
-      notifications, and progress indicators can look during a simulated
-      “hacked” scenario.
-    </p>
-    <p>
-      It does <strong>not</strong> hack anything, collect data, or access your system.
-      Everything you see is client-side and purely for demonstration.
+      This is a visual demonstration of fake security alerts and progress
+      indicators. Nothing is real or collected.
     </p>
     <button onclick="closeInfo()">Got it</button>
   </div>
@@ -187,8 +189,10 @@ if(localStorage.getItem("theme")==="dark"){
 }
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("theme",
-    document.body.classList.contains("dark")?"dark":"light");
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("dark")?"dark":"light"
+  );
 }
 
 const panel=document.getElementById("panel");
@@ -228,7 +232,6 @@ const demoSteps=[
   "Firewall bypassed",
   "Unauthorized access detected",
   "Extracting credentials",
-  "IP traced: 185.21.44.92",
   "Encrypting files",
   "LOCKDOWN IN 5",
   "LOCKDOWN IN 4",
