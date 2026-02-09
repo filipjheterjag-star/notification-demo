@@ -22,7 +22,6 @@ body.dark{
   --muted:#9ca3af;
 }
 
-/* 🌊 GLOBAL SMOOTHNESS */
 *{
   transition:
     background-color .35s ease,
@@ -51,7 +50,6 @@ body{
 
 h2{margin-top:0}
 
-/* 🔘 BUTTONS */
 button{
   width:100%;
   padding:13px;
@@ -77,18 +75,11 @@ button:active{
 
 .danger{
   background:var(--danger);
-  box-shadow:0 0 0 rgba(239,68,68,.6);
 }
-
-.danger:hover{
-  box-shadow:0 0 18px rgba(239,68,68,.7);
-}
-
 .secondary{
   background:#111827;
 }
 
-/* 📊 PROGRESS */
 .progress{
   width:100%;
   height:10px;
@@ -104,7 +95,6 @@ button:active{
   transition:width .35s cubic-bezier(.4,0,.2,1);
 }
 
-/* 👣 FOOTER */
 .footer{
   text-align:center;
   font-size:12px;
@@ -112,12 +102,12 @@ button:active{
   margin-top:22px;
 }
 
-/* 🧭 PANEL */
+/* PANEL */
 .sidebar{
   position:fixed;
   right:0;
   top:0;
-  width:340px;
+  width:360px;
   height:100%;
   background:var(--card);
   padding:18px;
@@ -132,7 +122,7 @@ button:active{
 
 .panel-title{
   font-weight:700;
-  margin:14px 0 8px;
+  margin:16px 0 8px;
 }
 
 input{
@@ -143,28 +133,39 @@ input{
   font-size:14px;
 }
 
-/* 🖥 TERMINAL HISTORY */
 .history{
   background:#000;
   color:#22c55e;
   padding:12px;
   border-radius:12px;
   font-family:monospace;
-  height:220px;
+  height:180px;
   overflow-y:auto;
   font-size:13px;
 }
 
-.log{
-  animation:fadeIn .25s ease forwards;
+/* STATUS BOX */
+.status{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.stat{
+  background:#111827;
+  color:#fff;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
+  font-size:13px;
+}
+.stat span{
+  display:block;
+  font-size:20px;
+  font-weight:700;
 }
 
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(4px)}
-  to{opacity:1;transform:none}
-}
-
-/* ℹ MODAL */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -181,16 +182,6 @@ input{
   padding:22px;
   border-radius:16px;
   box-shadow:0 25px 50px rgba(0,0,0,.4);
-}
-
-/* 🚨 ALERT PULSE */
-body.alert{
-  animation:pulse .6s ease;
-}
-@keyframes pulse{
-  0%{box-shadow:inset 0 0 0 rgba(239,68,68,0)}
-  50%{box-shadow:inset 0 0 40px rgba(239,68,68,.35)}
-  100%{box-shadow:none}
 }
 </style>
 </head>
@@ -218,6 +209,13 @@ body.alert{
   <div class="panel-title">Demo notifications</div>
   <input id="demoCount" type="number" min="3" max="100" value="12">
 
+  <div class="panel-title">Notification status</div>
+  <div class="status">
+    <div class="stat">Sent<span id="sent">0</span></div>
+    <div class="stat">Blocked<span id="blocked">0</span></div>
+    <div class="stat">Total<span id="total">0</span></div>
+  </div>
+
   <div class="panel-title">History</div>
   <div class="history" id="history">No notifications yet.</div>
 </div>
@@ -231,7 +229,7 @@ body.alert{
 </div>
 
 <script>
-/* Dark mode */
+/* DARK MODE */
 if(localStorage.getItem("theme")==="dark"){
   document.body.classList.add("dark");
 }
@@ -247,27 +245,47 @@ const bar=document.getElementById("bar");
 const infoModal=document.getElementById("infoModal");
 const demoCountInput=document.getElementById("demoCount");
 
+/* STATS */
+let sent=0, blocked=0, total=0;
+const sentEl=document.getElementById("sent");
+const blockedEl=document.getElementById("blocked");
+const totalEl=document.getElementById("total");
+
+function updateStats(){
+  sentEl.textContent=sent;
+  blockedEl.textContent=blocked;
+  totalEl.textContent=total;
+}
+
 function togglePanel(){panel.classList.toggle("open")}
 function openInfo(){infoModal.classList.add("open")}
 function closeInfo(){infoModal.classList.remove("open")}
 
 function log(msg){
   if(historyBox.textContent.includes("No")) historyBox.innerHTML="";
-  const line=document.createElement("div");
-  line.className="log";
-  line.textContent="> "+msg;
-  historyBox.appendChild(line);
+  historyBox.innerHTML += "> "+msg+"<br>";
   historyBox.scrollTop=historyBox.scrollHeight;
 }
 
 function requestPermission(){
-  if("Notification"in window) Notification.requestPermission();
+  if("Notification"in window){
+    Notification.requestPermission();
+  }
 }
 
 function notify(title,body){
-  if(Notification.permission==="granted"){
-    try{new Notification(title,{body})}catch{}
+  total++;
+  if("Notification"in window && Notification.permission==="granted"){
+    try{
+      new Notification(title,{body});
+      sent++;
+    }catch{
+      blocked++;
+    }
+  }else{
+    blocked++;
   }
+  updateStats();
   log(body);
 }
 
@@ -288,17 +306,13 @@ const demoMessages=[
 function startDemo(){
   bar.style.width="0%";
   historyBox.innerHTML="";
-  const total=Math.max(3,Number(demoCountInput.value)||12);
+  const totalDemo=Math.max(3,Number(demoCountInput.value)||12);
 
-  for(let i=0;i<total;i++){
+  for(let i=0;i<totalDemo;i++){
     setTimeout(()=>{
       const msg=demoMessages[i%demoMessages.length];
       notify("SECURITY ALERT",msg);
-      bar.style.width=((i+1)/total*100)+"%";
-      if(msg.includes("LOCKED")){
-        document.body.classList.add("alert");
-        setTimeout(()=>document.body.classList.remove("alert"),600);
-      }
+      bar.style.width=((i+1)/totalDemo*100)+"%";
     },i*420);
   }
 }
