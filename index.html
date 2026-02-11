@@ -5,316 +5,220 @@
 <title>Notification Demo</title>
 
 <style>
-:root{
-  --bg:#f4f6f8;
-  --card:#ffffff;
-  --text:#111827;
-  --accent:#4f46e5;
-  --success:#22c55e;
-  --danger:#ef4444;
-  --muted:#6b7280;
-}
+:root{--bg:#f4f6f8;--card:#fff;--text:#000;--panel:#eef2ff}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--panel:#020617}
+body{margin:0;padding:20px;font-family:Arial;background:var(--bg);color:var(--text);transition:background .4s,color .4s}
+.main{max-width:520px;margin:auto;background:var(--card);padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
+button,input{width:100%;padding:10px;margin-top:10px;border-radius:6px;font-size:15px}
+button{border:none;cursor:pointer}
+.primary{background:#4f46e5;color:#fff}
+.normal{background:#10b981;color:#fff}
+.danger{background:#ef4444;color:#fff}
+.stop{background:#6b7280;color:#fff}
+.panelBtn{background:#0ea5e9;color:#fff}
+.notice{padding:8px;background:#fde68a;color:#92400e;border-radius:6px;font-size:13px;display:none}
+.progress{width:100%;height:14px;background:#374151;border-radius:7px;overflow:hidden;margin-top:10px}
+.bar{height:100%;width:0%;background:#ef4444}
+.footer{text-align:center;font-size:13px;opacity:.7;margin-top:20px}
 
-body.dark{
-  --bg:#0f172a;
-  --card:#020617;
-  --text:#e5e7eb;
-  --accent:#22c55e;
-}
-
-*{
-  transition:background-color .35s,color .35s,box-shadow .35s,transform .2s;
-}
-
-body{
-  margin:0;
-  padding:24px;
-  font-family:system-ui,Arial;
-  background:var(--bg);
-  color:var(--text);
-}
-
-.main{
-  max-width:540px;
-  margin:auto;
-  background:var(--card);
-  padding:26px;
-  border-radius:20px;
-  box-shadow:0 30px 60px rgba(0,0,0,.18);
-}
-
-.footer{
-  margin-top:22px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-}
-
-button{
-  width:100%;
-  padding:13px;
-  margin-top:10px;
-  border:none;
-  border-radius:14px;
-  font-weight:600;
-  cursor:pointer;
-  background:var(--accent);
-  color:#fff;
-}
-
-button:hover{transform:translateY(-2px)}
-button:active{transform:scale(.97)}
-
-.secondary{background:#111827}
-.danger{background:var(--danger)}
-
-.progress{
-  width:100%;
-  height:10px;
-  background:#e5e7eb;
-  border-radius:6px;
-  overflow:hidden;
-  margin-top:16px;
-}
-.bar{
-  height:100%;
-  width:0%;
-  background:var(--danger);
-  transition:width .4s ease;
-}
-
-.sidebar{
-  position:fixed;
-  right:0;top:0;
-  width:380px;height:100%;
-  background:var(--card);
-  padding:18px;
-  transform:translateX(100%);
-  box-shadow:-12px 0 35px rgba(0,0,0,.35);
-}
+/* SIDEBARS */
+.sidebar{position:fixed;top:0;width:320px;height:100%;background:var(--card);padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.25);transition:.3s;overflow-y:auto;z-index:1000}
+.left{left:0;transform:translateX(-100%)}
+.right{right:0;transform:translateX(100%)}
 .sidebar.open{transform:translateX(0)}
 
-.panel-title{
-  margin:14px 0 6px;
-  font-weight:700;
-}
+.section{margin-top:20px}
+.history{background:var(--panel);padding:10px;border-radius:6px;font-size:13px;max-height:160px;overflow-y:auto}
+.statbar{height:12px;background:#374151;border-radius:6px;overflow:hidden;margin-top:6px}
+.statfill{height:100%;width:0%;background:#22c55e}
 
-input{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #d1d5db;
-}
-
-.history{
-  background:#000;
-  color:#22c55e;
-  font-family:monospace;
-  padding:10px;
-  border-radius:12px;
-  height:180px;
-  overflow-y:auto;
-}
-
-.status{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.stat{
-  background:#111827;
-  color:#fff;
-  padding:12px;
-  border-radius:14px;
-  text-align:center;
-  position:relative;
-}
-
-.stat.success{box-shadow:0 0 0 1px var(--success)}
-.stat.blocked{box-shadow:0 0 0 1px var(--danger)}
-
-.stat span{
-  display:block;
-  font-size:22px;
-  font-weight:800;
-}
-
-.icon{
-  position:absolute;
-  top:8px;
-  right:10px;
-  font-size:16px;
-  opacity:.85;
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.modal.open{display:flex}
-.modal-box{
-  background:var(--card);
-  padding:22px;
-  border-radius:18px;
-}
+/* WINDOWS PREVIEW */
+#toastArea{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:3000}
+.toast{width:320px;background:#111827;color:#e5e7eb;border-radius:10px;padding:12px;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
 </head>
 
 <body>
 
 <div class="main">
-  <h2>🔔 Notification Experiment</h2>
+<h2>🔔 Notification Experiment</h2>
 
-  <button onclick="requestPermission()">Allow Notifications</button>
-  <button onclick="sendTest()">Send Test Notification</button>
-  <button class="danger" onclick="startDemo()">⚠ Fake Hacked Demo</button>
-  <button class="secondary" onclick="togglePanel()">⚙ Controls</button>
-  <button class="secondary" onclick="openInfo()">ℹ What is this demo?</button>
-
-  <div class="progress"><div class="bar" id="bar"></div></div>
-
-  <div class="footer">© Copyright 2026 FilipoPencil</div>
+<div class="notice" id="windowsNotice">
+Only supported for Chromebook at this point.<br>
+Windows uses a visual preview.
 </div>
 
-<div class="sidebar" id="panel">
-  <button class="secondary" onclick="togglePanel()">❌ Close</button>
-  <button onclick="toggleDark()">🌙 Toggle Dark Mode</button>
+<button class="primary" onclick="requestPermission()">Allow Notifications</button>
+<button class="normal" onclick="sendOne()">Send Notification</button>
+<button class="danger" onclick="startDemo()">⚠️ Fake “Hacked” Demo</button>
+<button class="stop" onclick="stopAll()">🛑 Stop</button>
 
-  <div class="panel-title">Demo notifications</div>
-  <input id="demoCount" type="number" min="3" max="100" value="12">
+<div class="progress"><div class="bar" id="bar"></div></div>
 
-  <div class="panel-title">Session stats</div>
-  <div class="status">
-    <div class="stat success">Sent<span id="sSent">0</span><div class="icon">✓</div></div>
-    <div class="stat blocked">Blocked<span id="sBlocked">0</span><div class="icon">✕</div></div>
-    <div class="stat">Total<span id="sTotal">0</span></div>
-  </div>
+<button class="panelBtn" onclick="toggleLeft()">👤 Account & Stats</button>
+<button class="panelBtn" onclick="toggleRight()">⚙️ Controls</button>
 
-  <div class="panel-title">Lifetime stats</div>
-  <div class="status">
-    <div class="stat success">Sent<span id="lSent">0</span><div class="icon">✓</div></div>
-    <div class="stat blocked">Blocked<span id="lBlocked">0</span><div class="icon">✕</div></div>
-    <div class="stat">Total<span id="lTotal">0</span></div>
-  </div>
-
-  <div class="panel-title">History</div>
-  <div class="history" id="history">No notifications yet.</div>
+<div class="footer">© Copyright 2026 FilipoPencil</div>
 </div>
 
-<div class="modal" id="info">
-  <div class="modal-box">
-    <h3>What is this demo?</h3>
-    <p>This is a fake security alert demo. Nothing is real.</p>
-    <button onclick="closeInfo()">OK</button>
-  </div>
+<!-- LEFT SIDEBAR -->
+<div class="sidebar left" id="leftBar">
+<button class="panelBtn" onclick="toggleLeft()">❌ Close</button>
+
+<div class="section">
+<h3>👤 Account (Demo)</h3>
+
+<div id="loginBox">
+<input id="username" placeholder="Username">
+<input id="password" type="password">
+<button class="panelBtn" onclick="login()">Login / Create</button>
 </div>
+
+<div id="userBox" style="display:none">
+<strong id="userLabel"></strong>
+<button class="panelBtn" onclick="logout()">Log out</button>
+
+<div class="section">
+Notifications sent: <strong id="sentCount">0</strong>
+<div class="statbar"><div class="statfill" id="statFill"></div></div>
+<div style="font-size:12px;opacity:.6;margin-top:6px">
+Stats may be inaccurate (known issue)
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- RIGHT SIDEBAR -->
+<div class="sidebar right" id="rightBar">
+<button class="panelBtn" onclick="toggleRight()">❌ Close</button>
+<button class="panelBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+
+<div class="section">
+<input id="titleInput" placeholder="Title">
+<input id="msgInput" placeholder="Message">
+</div>
+
+<div class="section">
+Speed <span id="speedVal">200</span> ms
+<input type="range" min="100" max="2000" step="100" value="200" id="speed">
+Count <span id="countVal">30</span>
+<input type="range" min="5" max="100" value="30" id="count">
+</div>
+
+<div class="section">
+<div class="history" id="history">No notifications yet.</div>
+</div>
+</div>
+
+<div id="toastArea"></div>
 
 <script>
-/* THEME */
-if(localStorage.theme==="dark") document.body.classList.add("dark");
-function toggleDark(){
-  document.body.classList.toggle("dark");
-  localStorage.theme=document.body.classList.contains("dark")?"dark":"light";
+/* OS */
+const isWindows=/Win/i.test(navigator.userAgent);
+if(isWindows)windowsNotice.style.display="block";
+
+/* STATE */
+let currentUser=null;
+let speed=200,count=30;
+const timeouts=[];
+
+/* SIDEBARS */
+function toggleLeft(){leftBar.classList.toggle("open")}
+function toggleRight(){rightBar.classList.toggle("open")}
+function toggleDark(){document.body.classList.toggle("dark")}
+
+/* USERS */
+function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
+function saveUsers(u){localStorage.setItem("users",JSON.stringify(u))}
+
+function login(){
+  const u=username.value.trim(),p=password.value;
+  if(!u||!p)return alert("Enter both fields");
+  const users=loadUsers();
+  if(!users[u]) users[u]={password:p,sent:0};
+  if(users[u].password!==p) return alert("Wrong password");
+  currentUser=u; saveUsers(users); updateUI();
+}
+function logout(){currentUser=null;updateUI()}
+function updateUI(){
+  if(currentUser){
+    loginBox.style.display="none";
+    userBox.style.display="block";
+    userLabel.textContent="Logged in as "+currentUser;
+    updateStats();
+  }else{
+    loginBox.style.display="block";
+    userBox.style.display="none";
+  }
+}
+function updateStats(){
+  const users=loadUsers();
+  const sent=users[currentUser]?.sent||0;
+  sentCount.textContent=sent;
+  statFill.style.width=Math.min(sent,100)+"%";
+}
+function incrementStat(){
+  if(!currentUser)return;
+  const users=loadUsers();
+  users[currentUser].sent++;
+  saveUsers(users);
+  updateStats();
 }
 
-/* PANEL */
-const panel=document.getElementById("panel");
-function togglePanel(){panel.classList.toggle("open")}
-
-/* MODAL */
-const info=document.getElementById("info");
-function openInfo(){info.classList.add("open")}
-function closeInfo(){info.classList.remove("open")}
+/* CONTROLS */
+speed.oninput=()=>{speed=+speed.value;speedVal.textContent=speed}
+count.oninput=()=>{count=+count.value;countVal.textContent=count}
 
 /* HISTORY */
-const historyBox=document.getElementById("history");
 function log(msg){
-  if(historyBox.textContent.includes("No")) historyBox.innerHTML="";
-  historyBox.innerHTML+="> "+msg+"<br>";
-  historyBox.scrollTop=historyBox.scrollHeight;
+  if(history.textContent.includes("No"))history.innerHTML="";
+  history.innerHTML+="• "+msg+"<br>";
 }
 
-/* ANIMATED COUNTERS */
-function animate(el,from,to){
-  const start=performance.now();
-  const dur=350;
-  function frame(t){
-    const p=Math.min((t-start)/dur,1);
-    el.textContent=Math.floor(from+(to-from)*p);
-    if(p<1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
+/* PREVIEW TOAST (FIXED) */
+function toast(t,b){
+  const d=document.createElement("div");
+  d.className="toast";
+  d.innerHTML=`<strong>${t}</strong><div>${b}</div>`;
+  toastArea.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
 }
 
-/* STATS */
-let session={sent:0,blocked:0,total:0};
-let lifetime=JSON.parse(localStorage.lifetimeStats||'{"sent":0,"blocked":0,"total":0}');
-
-function updateStats(){
-  animate(sSent,+sSent.textContent,session.sent);
-  animate(sBlocked,+sBlocked.textContent,session.blocked);
-  animate(sTotal,+sTotal.textContent,session.total);
-  animate(lSent,+lSent.textContent,lifetime.sent);
-  animate(lBlocked,+lBlocked.textContent,lifetime.blocked);
-  animate(lTotal,+lTotal.textContent,lifetime.total);
-  localStorage.lifetimeStats=JSON.stringify(lifetime);
-}
-updateStats();
-
-/* NOTIFICATIONS */
-function requestPermission(){
-  if("Notification"in window) Notification.requestPermission();
-}
-
-function notify(title,body){
-  session.total++; lifetime.total++;
-  if("Notification"in window && Notification.permission==="granted"){
-    try{
-      new Notification(title,{body});
-      session.sent++; lifetime.sent++;
-    }catch{
-      session.blocked++; lifetime.blocked++;
+/* NOTIFICATIONS (FIXED WINDOWS PREVIEW) */
+function send(t,b){
+  if(isWindows) toast(t,b);
+  try{
+    if(!isWindows && Notification.permission==="granted"){
+      new Notification(t,{body:b});
     }
-  }else{
-    session.blocked++; lifetime.blocked++;
-  }
-  updateStats();
-  log(body);
+  }catch{}
 }
 
-function sendTest(){
-  notify("Demo","This is a test notification");
-}
+/* ACTIONS */
+function requestPermission(){Notification.requestPermission()}
 
-/* DEMO */
-const messages=[
-  "Initiating breach…",
-  "Firewall bypassed",
-  "Access granted",
-  "Extracting data",
-  "Encrypting files",
-  "IP traced",
-  "SYSTEM LOCKED"
-];
-const bar=document.getElementById("bar");
-const demoCount=document.getElementById("demoCount");
+function sendOne(){
+  send(titleInput.value||"Demo",msgInput.value||"Hello");
+  log(msgInput.value||"Hello");
+  incrementStat();
+}
 
 function startDemo(){
-  bar.style.width="0%";
-  historyBox.innerHTML="";
-  const count=Math.max(3,+demoCount.value||12);
-  for(let i=0;i<count;i++){
-    setTimeout(()=>{
-      notify("SECURITY ALERT",messages[i%messages.length]);
-      bar.style.width=((i+1)/count*100)+"%";
-    },i*380);
+  stopAll(); bar.style.width="0%";
+  for(let i=1;i<=count;i++){
+    const to=setTimeout(()=>{
+      send("SECURITY ALERT",msgInput.value||"Alert");
+      bar.style.width=(i/count*100)+"%";
+      log("SECURITY ALERT");
+      incrementStat();
+    },i*speed);
+    timeouts.push(to);
   }
 }
+
+function stopAll(){while(timeouts.length)clearTimeout(timeouts.pop())}
 </script>
 
 </body>
